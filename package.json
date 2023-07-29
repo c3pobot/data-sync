@@ -1,0 +1,34 @@
+{
+  "name": "datasync",
+  "version": "1.0.0",
+  "description": "c3po-datasync",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "update": "chmod a+x updategitdependency.sh && ./updategitdependency.sh",
+    "build": "chmod a+x buildtestimage.sh && ./buildtestimage.sh c3pobot-old/datasync",
+    "prod": "chmod a+x buildprodimage.sh && ./buildprodimage.sh c3pobot-old/datasync"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/c3po-shard/datasync.git"
+  },
+  "author": "scuba",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/c3po-shard/datasync/issues"
+  },
+  "homepage": "https://gitlab.com/c3po-shard/datasync#readme",
+  "dependencies": {
+    "app-module-path": "^2.2.0",
+    "body-parser": "^1.20.2",
+    "compression": "^1.7.4",
+    "express": "^4.17.1",
+    "got": "^11.8.2",
+    "jszip": "^3.10.1",
+    "mongoapiclient": "github:c3pobot/mongoapiclient",
+    "node-fetch": "^2.6.7",
+    "s3client": "github:c3pobot/s3client",
+    "uuid": "^8.3.2"
+  }
+}
