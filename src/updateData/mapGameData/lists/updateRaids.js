@@ -101,7 +101,6 @@ module.exports = async(errObj, assetVersion)=>{
     guildCampaign = null
     campaignNode = null
   }catch(e){
-    console.error(e);
-    errObj.error++
+    throw(e)
   }
 }

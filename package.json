@@ -26,7 +26,8 @@
     "express": "^4.17.1",
     "got": "^11.8.2",
     "jszip": "^3.10.1",
-    "mongoapiclient": "github:c3pobot/mongoapiclient",
+    "logger": "github:c3pobot/logger",
+    "mongoclient": "github:c3pobot/mongoclient",
     "node-fetch": "^2.6.7",
     "s3client": "github:c3pobot/s3client",
     "uuid": "^8.3.2"

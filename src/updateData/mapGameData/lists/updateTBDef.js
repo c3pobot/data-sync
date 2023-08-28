@@ -66,8 +66,7 @@ module.exports = async(errObj)=>{
     await mongo.set('autoComplete', {_id: 'tb-name'}, {data: autocomplete, include: true})
     errObj.complete++
   }catch(e){
-    console.log(e)
-    errObj.error++
+    throw(e)
   }
 
 }

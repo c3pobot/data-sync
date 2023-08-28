@@ -53,7 +53,6 @@ module.exports = async(errObj)=>{
       errObj.complete++
     }
   }catch(e){
-    console.error(e);
-    errObj.error++
+    throw(e)
   }
 }

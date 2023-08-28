@@ -24,7 +24,6 @@ module.exports = async(errObj)=>{
     }
     lang = null
   }catch(e){
-    console.log(e)
-    errObj.error++
+    throw(e)
   }
 }

@@ -47,4 +47,12 @@ const saveImages = async(imgs = [], assetVersion, dir, collectionId)=>{
     throw(e)
   }
 }
-checkMissing()
+const CheckMongo = ()=>{
+  let status = mongo.status()
+  if(status){
+    checkMissing()
+    return
+  }
+  setTimeout(CheckMongo, 5000)
+}
+CheckMongo()

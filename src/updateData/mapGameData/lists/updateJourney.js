@@ -223,7 +223,6 @@ module.exports = async(errObj = {})=>{
       return
     }
   }catch(e){
-    console.error(e);
-    errObj.error++
+    throw(e)
   }
 }

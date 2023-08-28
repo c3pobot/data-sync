@@ -1,7 +1,7 @@
 'use strict'
 const ReadFile = require('./readFile')
 module.exports = async(errObj)=>{
-  try {
+  try{
     let units = await ReadFile(baseDir+'/data/files/units.json')
     if(units){
       units = units.filter(u => {
@@ -11,8 +11,8 @@ module.exports = async(errObj)=>{
           return true
       })
       let idList = units.reduce((ids,u) => {
-          ids = ids.concat(u.skillReference.map(s => s.skillId))
-          ids = ids.concat(u.crew.map(cu => cu.skillReference[0].skillId))
+          ids = ids.concat(u.limitBreakRef.filter(x=>x.abilityId.startsWith('ultimate')).map(s => s.abilityId))
+          ids = ids.concat(u.uniqueAbilityRef.filter(x=>x.abilityId.startsWith('ultimate')).map(s => s.abilityId))
           return ids
       },[])
       units = null
@@ -21,9 +21,7 @@ module.exports = async(errObj)=>{
       errObj.error++
       return
     }
-  } catch (e) {
-    console.log(e)
-    errObj.error++
+  }catch(e){
+    throw(e)
   }
-
 }

@@ -174,7 +174,6 @@ module.exports = async(errObj = {}, assetVersion)=>{
     stats = null, faction = null, units = null, ability = null, crons = null, images = null
     abilityList = null, lang = null, unitList = null, factionList = null, targetSet = null, enums = null
   }catch(e){
-    console.error(e);
-    errObj.error++
+    throw(e)
   }
 }

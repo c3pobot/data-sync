@@ -5,6 +5,19 @@ require('./assetGetter')
 const CheckEvents = require('./events')
 const MapPlatoons = require('./mapPlatoons')
 
+const CheckMongo = ()=>{
+  try{
+    let status = mongo.status()
+    if(status){
+      CheckAPIReady()
+      return
+    }
+    setTimeout(CheckMongo, 5000)
+  }catch(e){
+    console.error(e);
+    setTimeout(CheckMongo, 5000)
+  }
+}
 const CheckAPIReady = async()=>{
   const obj = await Client('metadata')
   if(obj?.latestGamedataVersion){
@@ -56,4 +69,4 @@ const UpdateDataCronAutoComplete = async()=>{
   }
 }
 
-CheckAPIReady()
+CheckMongo()

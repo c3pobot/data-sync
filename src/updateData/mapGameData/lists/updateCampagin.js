@@ -103,8 +103,6 @@ module.exports = async(errObj)=>{
     obj = null
     errObj.complete++
   }catch(e){
-    console.error('error updating campaign data')
-    console.error(e)
-    errObj.error++
+    throw(e)
   }
 }

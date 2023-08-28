@@ -263,7 +263,6 @@ module.exports = async(errObj)=>{
     missingEffects = null
     errObj.complete++
   }catch(e){
-    console.error(e)
-    errObj.error++
+    throw(e)
   }
 }

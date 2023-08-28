@@ -157,7 +157,6 @@ module.exports = async(errObj, assetVersion)=>{
       return
     }
   } catch (e) {
-    console.error(e)
-    errObj.error++
+    throw(e)
   }
 }

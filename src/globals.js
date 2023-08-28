@@ -7,7 +7,7 @@ global.GameDataVersions = {
   gameVersion: '',
   localeVersion: ''
 }
-global.mongo = require('mongoapiclient')
+global.mongo = require('mongoclient')
 //global.mongo = require('./mongo')
 global.DataUpdate = require('./updateData')
 global.HP = require('./helpers')

@@ -76,7 +76,6 @@ module.exports = async(metaData = {}, errorObj = {})=>{
       errorObj.complete++;
     }
   }catch(e){
-    console.error(e)
-    return 0
+    throw(e)
   }
 }

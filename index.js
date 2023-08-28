@@ -1,7 +1,9 @@
 'use strict'
+const log = require('logger')
+let logLevel = process.env.LOG_LEVEL || log.Level.INFO;
+log.setLevel(logLevel);
 process.on('unhandledRejection', (error) => {
-  console.error(error)
+  log.error(error)
 });
-require('app-module-path').addPath(__dirname);
 global.baseDir = __dirname;
 require('./src')
