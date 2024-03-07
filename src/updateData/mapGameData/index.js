@@ -23,7 +23,7 @@ const checkData = async(gameVersion, localeVersion, assetVersion, force = false)
         missing.push(i)
         continue;
       }
-      let versions = (await mongo.find('versionsOld', {_id: i}))[0]
+      let versions = (await mongo.find('versions', {_id: i}))[0]
       if(versions){
         let status = checkVersions(gameVersion, localeVersion, assetVersion, versions)
         if(status === true){
@@ -58,7 +58,7 @@ module.exports = async({ assetVersion, latestGamedataVersion, latestLocalization
         if(errorObj?.error) status = false
         if(status){
           totalCount++
-          await mongo.set('versionsOld', {_id: missing[i]}, {assetVersion: assetVersion, gameVersion: latestGamedataVersion, localeVersion: latestLocalizationBundleVersion})
+          await mongo.set('versions', {_id: missing[i]}, {assetVersion: assetVersion, gameVersion: latestGamedataVersion, localeVersion: latestLocalizationBundleVersion})
         }
       }
     }

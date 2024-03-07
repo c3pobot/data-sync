@@ -1,21 +1,25 @@
 'use strict'
-const s3client = require('s3client')
-const path = require('path')
+const log = require('logger');
+const minio = require('../../minio');
+
 const S3_BUCKET = process.env.S3_IMAGE_BUCKET
 
 const checkImages = async(imgs = [], assetVersion, dir, collectionId)=>{
   try{
-    let remoteList = await s3client.list(S3_BUCKET, dir)
-    if(!remoteList) remoteList = []
-    remoteList = remoteList.map(x=>x.Key)
-    let missing = imgs.filter(x=>!remoteList?.includes(dir+'/'+x+'.png'))
+    let key
+    if(dir) key = `${dir}`
+    let bucketList = await minio.list(S3_BUCKET, key)
+    if(!bucketList) bucketList = []
+    bucketList = bucketList.map(x=>x.name)
+
+    let missing = imgs.filter(x=>!bucketList?.includes(`${dir}/${x}.png`))
     if(!missing) throw('Error determing missing assets for '+dir)
-    console.log('Missing '+missing.length+' image for '+dir+'...')
+    log.info(`Missing ${missing?.length}/${imgs?.length} images for ${dir}...`)
     if(missing.length === 0) return
     await mongo.set('missingAssets', {_id: collectionId}, {imgs: missing, dir: dir, assetVersion: assetVersion})
     return
   }catch(e){
-    console.error(e)
+    log.error(e)
     setTimeout(()=>checkImages(imgs, assetVersion, dir, collectionId), 5000)
   }
 }

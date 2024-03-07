@@ -2,6 +2,7 @@ const log = require('logger')
 const s3client = require('s3client')
 const fs = require('fs')
 const path = require('path')
+
 const checkFile = async(fileName, version, force)=>{
   try{
     if(!version || !fileName) return
@@ -28,6 +29,17 @@ const saveFile = async(fileName, version, force)=>{
     log.error(e);
   }
 }
+const saveEnums = async(version)=>{
+  try{
+    let data = await Client('enums')
+    if(data){
+      await fs.writeFileSync(path.join(baseDir, 'data', 'files', 'enums.json'), JSON.stringify({ version: version, data: data }))
+      return true
+    }
+  }catch(e){
+    log.error(e)
+  }
+}
 module.exports = async(versions = {}, force)=>{
   try{
     log.info('getting files from object storage...')
@@ -49,6 +61,7 @@ module.exports = async(versions = {}, force)=>{
     if(count !== +totalCount.length) return false
     let status = await saveFile('Loc_ENG_US.txt.json', versions.latestLocalizationBundleVersion)
     if(status) status = await saveFile('Loc_Key_Mapping.txt.json', versions.latestLocalizationBundleVersion)
+    if(status) status = await saveEnums(versions.latestGamedataVersion)
     if(status) return remoteVersions
   }catch(e){
     throw(e);

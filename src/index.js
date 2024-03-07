@@ -1,7 +1,12 @@
 'use strict';
+const log = require('logger')
+let logLevel = process.env.LOG_LEVEL || log.Level.INFO;
+log.setLevel(logLevel);
 require('./globals')
-require('./expressServer')
+//require('./expressServer')
 require('./assetGetter')
+
+const mongo = require('mongoclient')
 const CheckEvents = require('./events')
 const MapPlatoons = require('./mapPlatoons')
 
