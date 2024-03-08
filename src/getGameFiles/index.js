@@ -3,7 +3,7 @@ const minio = require('./minio')
 const fs = require('fs')
 const path = require('path')
 const swgohClient = require(`${baseDir}/src/client`)
-
+const mongo = require('mongoclient')
 const checkFile = async(fileName, version, force)=>{
   try{
     if(!version || !fileName) return
@@ -22,7 +22,7 @@ const saveFile = async(fileName, version, force)=>{
     if(fileExists) return true
     let obj = await minio.get('gamedata', null, fileName)
     if(obj?.version === version && obj.data){
-      log.info(`saving ${fileName}`)
+      //log.info(`saving ${fileName}`)
       await fs.writeFileSync(path.join(baseDir, 'data', 'files', fileName), JSON.stringify(obj))
       if(fileName === 'Loc_ENG_US.txt.json') await mongo.set('localeFiles', { _id: 'ENG_US' }, obj.data)
       return true
