@@ -1,12 +1,16 @@
 'use strict'
+const log = require('logger')
+const swgohClient = require(`${baseDir}/src/client`)
+const mongo = require('mongoclient')
+
 module.exports = async(uId)=>{
   try{
-    const obj = await Client('authGuest', {uid: guestAccount.uId})
+    let obj = await swgohClient('authGuest', {uid: uId})
     if(obj?.authId && obj?.authToken){
       await mongo.set('identity', {_id: uId}, {auth: obj})
       return obj
     }
   }catch(e){
-    console.error(e)
+    log.error(e)
   }
 }

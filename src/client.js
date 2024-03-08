@@ -1,39 +1,41 @@
 'use strict'
 const path = require('path')
-const fetch = require('node-fetch')
+const fetch = require('./fetch')
 const GAME_CLIENT_URL = process.env.GAME_CLIENT_URL || 'http://localhost:3000'
+let retryCount = +process.env.CLIENT_RETRY_COUNT || 6
 const GETRoutes = {'enums': 'enums'}
-const parseResponse = async(res)=>{
+
+
+const requestWithRetry = async(uri, opts = {}, count = 0)=>{
   try{
-    if(!res) return
-    let body
-    if (res.status?.toString().startsWith('5')) throw('Bad status code '+res.status)
-    if (res.headers?.get('Content-Type')?.includes('application/json')){
-      body = await res.json()
-    }else{
-      body = await res.text()
+    let res = await fetch(uri, opts)
+    if(res?.error === 'FetchError' || res?.body?.code === 6 || (res?.status === 400 && res?.body?.message)){
+      if(count < retryCount){
+        count++
+        return await requestWithRetry(uri, opts, count)
+      }else{
+        throw(`tried request ${count} time(s) and errored with ${res.error} : ${res.message}`)
+      }
     }
-    if(!body && res.status === 204) body = { status: 204 }
-    return body
+    return res
   }catch(e){
-    console.error(e);
+    throw(e)
   }
 }
-
-module.exports = async(uri, payload, identity)=>{
+module.exports = async(uri, payload, identity = null)=>{
   try{
-    let headers = {"Content-Type": "application/json"}, method = 'POST'
-    if(GETRoutes[uri]) method = 'GET'
-    let opts = { method: method, timeout: 60000, compress: true, headers: headers }
+    let opts = { method: 'POST', timeout: 60000, compress: true, headers: { "Content-Type": "application/json" } }
+    if(GETRoutes[uri]) opts.method = 'GET'
     if(payload || identity){
       opts.body = {}
       if(payload) opts.body.payload = payload
       if(identity) opts.body.identity = identity
       opts.body = JSON.stringify(opts.body)
     }
-    let obj = await fetch(path.join(GAME_CLIENT_URL, uri), opts)
+    let obj = await requestWithRetry(path.join(GAME_CLIENT_URL, uri), opts)
+    if(obj?.body) return obj.body
     return await parseResponse(obj)
   }catch(e){
-    console.error(e)
+    throw(e)
   }
 }

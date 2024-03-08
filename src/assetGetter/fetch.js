@@ -5,8 +5,8 @@ const parseResponse = async(res)=>{
     if(res?.status?.toString().startsWith(4)) throw('Fetch Error')
     if(!res?.status?.toString().startsWith('2')) return
     let body
-    if(res.headers?.get('Content-Type')?.includes('application/json')) body = await res.json()
-    if(res.headers?.get('Content-Type')?.includes('text/plain')) body = await res.text()
+    //if(res.headers?.get('Content-Type')?.includes('application/json')) body = await res.json()
+    //if(res.headers?.get('Content-Type')?.includes('text/plain')) body = await res.text()
     if(res.headers?.get('Content-Disposition')?.includes('filename')){
       body = await res.arrayBuffer()
       body = Buffer.from(body)

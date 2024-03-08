@@ -2,13 +2,17 @@
 const log = require('logger')
 let logLevel = process.env.LOG_LEVEL || log.Level.INFO;
 log.setLevel(logLevel);
-require('./globals')
+//require('./globals')
 //require('./expressServer')
 require('./assetGetter')
 
 const mongo = require('mongoclient')
+const swgohClient = require('./client')
 const CheckEvents = require('./events')
 const MapPlatoons = require('./mapPlatoons')
+const updateData = require('./updateData')
+const { dataVersions } = require('./dataVersions')
+const UPDATE_INTERVAL = +process.env.UPDATE_INTERVAL || 30
 
 const CheckMongo = ()=>{
   try{
@@ -24,40 +28,65 @@ const CheckMongo = ()=>{
   }
 }
 const CheckAPIReady = async()=>{
-  const obj = await Client('metadata')
+  const obj = await swgohClient('metadata')
   if(obj?.latestGamedataVersion){
-    console.log('API is ready dataSync Server...')
+    log.info('API is ready data-sync...')
     StartSync()
     UpdateDataCronAutoComplete()
     SyncEvents()
   }else{
-    console.log('API is not ready on dataSync server .... Will try again in 5 seconds')
+    log.info('API is not ready data-sync...')
     setTimeout(()=>CheckAPIReady(), 5000)
   }
 }
+
 const StartSync = async()=>{
   try{
-    if(!dataUpateInProgress){
-      let obj = await Client('metadata')
-      if(obj?.latestGamedataVersion && (GameDataVersions.gameVersion != obj?.latestGamedataVersion || GameDataVersions.localeVersion != obj?.latestLocalizationBundleVersion)){
-        await DataUpdate()
-        dataUpateInProgress = false
+    if(!dataVersions.updateInProgress){
+      let updateNeeded = false
+      let obj = await swgohClient('metadata')
+      if(obj?.latestGamedataVersion && (dataVersions.gameVersion != obj?.latestGamedataVersion || dataVersions.localeVersion != obj?.latestLocalizationBundleVersion)) updateNeeded = true
+      if(!updateNeeded){
+        let configMapVersions = await mongo.find('configMaps', {}, { gameVersion: 1, localeVersion: 1})
+        if(configMapVersions && configMapVersions?.length !== 3) updateNeeded = true
+        if(configMapVersions?.length > 0) configMapVersions = configMapVersions.filter(x=>x.gameVersion !== obj?.latestGamedataVersion || x.localeVersion !== obj?.latestLocalizationBundleVersion)
+        if(configMapVersions?.length > 0) updateNeeded = true
       }
-      //console.log('GameVersion '+GameDataVersions.gameVersion)
+      if(!updateNeeded){
+        let gameDataVersion = (await mongo.find('botSettings', { _id: 'gameData' }, {version: 1 }))[0]
+        if(!gameDataVersion) updateNeeded = true
+        if(gameDataVersion?.version !== obj?.latestGamedataVersion) updateNeeded = true
+      }
+      if(!updateNeeded){
+        let mapDataVersions = await mongo.find('versions', {}, { gameVersion: 1, localeVersion: 1 })
+        if(mapDataVersions && mapDataVersions?.length !== 16) updateNeeded = true
+        if(mapDataVersions?.length > 0) mapDataVersions = mapDataVersions.filter(x=>x.gameVersion !== obj?.latestGamedataVersion || x.localeVersion !== obj?.latestLocalizationBundleVersion)
+        if(mapDataVersions?.length > 0) updateNeeded = true
+      }
+      if(updateNeeded){
+        await updateData()
+        dataVersions.updateInProgress = false
+      }
+      let configMapVersions = await mongo.find('configMaps', {}, )
     }
-    setTimeout(StartSync, +process.env.UPDATE_INTERVAL || 30000)
+    setTimeout(StartSync, UPDATE_INTERVAL * 1000)
   }catch(e){
-    console.error(e)
-    setTimeout(StartSync, +process.env.UPDATE_INTERVAL || 30000)
+    log.error(e)
+    setTimeout(StartSync, 5 * 1000)
   }
 }
 const SyncEvents = async()=>{
-  await CheckEvents()
-  setTimeout(SyncEvents, (process.env.UPDATE_INTERVAL ? (+process.env.UPDATE_INTERVAL * 4):300000))
+  try{
+    await CheckEvents()
+    setTimeout(SyncEvents, UPDATE_INTERVAL * 1000 * 4)
+  }catch(e){
+    log.error(e)
+    setTimeout(SyncEvents, 5 * 1000)
+  }
 }
 const UpdateDataCronAutoComplete = async()=>{
   try{
-    const obj = await mongo.find('datacronList', {}, {_id: 1, nameKey: 1, expirationTimeMs: 1})
+    let obj = await mongo.find('datacronList', {}, {_id: 1, nameKey: 1, expirationTimeMs: 1})
     if(obj?.length > 0){
       let array = [], timeNow = Date.now()
       for(let i in obj){
@@ -67,10 +96,10 @@ const UpdateDataCronAutoComplete = async()=>{
       }
       if(array?.length > 0) await mongo.set('autoComplete', {_id: 'datacron-set'}, { data: array, include: true })
     }
-    setTimeout(()=>UpdateDataCronAutoComplete(), 30000)
+    setTimeout(()=>UpdateDataCronAutoComplete(), UPDATE_INTERVAL * 1000)
   }catch(e){
-    console.error(e);
-    setTimeout(()=>UpdateDataCronAutoComplete(), 30000)
+    log.error(e);
+    setTimeout(()=>UpdateDataCronAutoComplete(), 5 * 1000)
   }
 }
 

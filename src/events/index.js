@@ -1,23 +1,28 @@
 'use strict'
+const log = require('logger')
+const mongo = require('mongoclient')
 const CheckIdentity = require('./checkIdentity')
 const AuthGuest = require('./authGuest')
-const UpdateGameEvents = require('./updateGameEvents')
+const updateGameEvents = require('./updateGameEvents')
+const swgohClient = require(`${baseDir}/src/client`)
+const { guestAccount } = require('./guestAccount')
+
 module.exports = async()=>{
   try{
     let pObj
     await CheckIdentity()
     if(guestAccount?.uId && guestAccount?.auth?.authId && guestAccount?.auth?.authToken){
-      pObj = await Client('getInitialData', {}, {
+      pObj = await swgohClient('getInitialData', {}, {
         androidId: guestAccount.uId,
         deviceId: guestAccount.uId,
         platform: 'Android',
         auth: guestAccount.auth
       })
       if(!pObj?.gameEvent){
-        const newTempAuth = await AuthGuest(guestAccount.uId)
+        let newTempAuth = await AuthGuest(guestAccount.uId)
         if(newTempAuth?.authId && newTempAuth?.authToken){
           guestAccount.auth = newTempAuth
-          pObj = await Client('getInitialData', {}, {
+          pObj = await swgohClient('getInitialData', {}, {
             androidId: guestAccount.uId,
             deviceId: guestAccount.uId,
             platform: 'Android',
@@ -27,12 +32,12 @@ module.exports = async()=>{
       }
     }
     if(pObj?.gameEvent){
-      await mongo.set('tempCache', {_id: 'gacEvent'}, {data: pObj.gameEvent.filter(x=>x.id.includes('GRAND_ARENA'))})
-      UpdateGameEvents(pObj.gameEvent)
+      await mongo.set('tempCache', {_id: 'gacEvent'}, { data: pObj.gameEvent.filter(x=>x.type === 10) })
+      await updateGameEvents(pObj.gameEvent)
     }else{
-      console.log('Error with Guest getInitialData for events update ...')
+      log.error('Error with Guest getInitialData for events update ...')
     }
   }catch(e){
-    console.error(e)
+    log.error(e)
   }
 }

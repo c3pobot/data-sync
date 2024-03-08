@@ -1,6 +1,7 @@
 const log = require('logger')
-const imagesToIgnore = require('./imagestoignore.json')
+const imagesToIgnore = require(`${baseDir}/src/enums/imagestoignore.json`)
 const saveImage = require('./saveImage')
+const mongo = require('mongoclient')
 const checkAssetName = (img)=>{
   try{
     if(!img) return

@@ -16,6 +16,6 @@ module.exports = (string)=>{
     string = string.replace(/\[\w{1,6}\]/g, '')
   	return string
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }

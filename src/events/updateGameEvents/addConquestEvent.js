@@ -1,12 +1,15 @@
 'use strict'
+const log = require('logger')
 const AddConquestSchedule = require('./addConquestSchedule')
-module.exports = async(event)=>{
+module.exports = async(event = {})=>{
   try{
-    const timeNow = (new Date()).getTime()
-    for(let i in event.instance){
-      if(event.instance[i].startTime > timeNow) await AddConquestSchedule(event.id, event.instance[i].id, event.instance[i].startTime)
+    let timeNow = Date.now(), i = event?.instance?.length
+    if(i > 0){
+      while(i--){
+        if(event.instance[i].startTime > timeNow) await AddConquestSchedule(event.id, event.instance[i].id, event.instance[i].startTime)
+      }
     }
   }catch(e){
-    console.error(e)
+    log.error(e)
   }
 }

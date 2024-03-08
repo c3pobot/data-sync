@@ -1,5 +1,7 @@
 'use strict'
+const log = require('logger')
 const getUnitList = require('./getUnitList')
+const mongo = require('mongoclient')
 let unitList = {}
 const GetPhase = (zoneId)=>{
   try{
@@ -10,7 +12,7 @@ const GetPhase = (zoneId)=>{
     if(zoneId.includes('phase05_')) return 'P5'
     if(zoneId.includes('phase06_')) return 'P6'
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }
 const GetConflict = (zoneId)=>{
@@ -22,7 +24,7 @@ const GetConflict = (zoneId)=>{
     if(zoneId.includes('conflict05')) return 'C5'
     if(zoneId.includes('conflict06')) return 'C6'
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }
 const GetType = (combatType, alignment)=>{
@@ -33,7 +35,7 @@ const GetType = (combatType, alignment)=>{
     if(alignment === 2) return 'LS'
     if(alignment === 3) return 'DS'
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }
 const GetSquads = (squads = [], pDef = {}, rarity = 0, relicTier = 1)=>{
@@ -56,7 +58,7 @@ const GetSquads = (squads = [], pDef = {}, rarity = 0, relicTier = 1)=>{
     }
     return res
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }
 const GetSort = (type, conflict)=>{
@@ -66,19 +68,18 @@ const GetSort = (type, conflict)=>{
     if(type === 'LS') return 3
     return +(conflict?.replace('C', ''))
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }
 const MapPlatoons = async(tbData = {})=>{
   try{
     let platoons = {}
-    const tbDef = (await mongo.find('tbDefinition', {_id: tbData.definitionId}, {nameKey: 1, reconZoneDefinition: 1, conflictZoneDefinition: 1, forceAlignment:1 }))[0]
-    const locale = (await mongo.find('localeFiles', {_id: 'ENG_US'}))[0]
-    //console.log('Creating Platoon Map for '+tbDef?.nameKey)
+    let tbDef = (await mongo.find('tbDefinition', {_id: tbData.definitionId}, {nameKey: 1, reconZoneDefinition: 1, conflictZoneDefinition: 1, forceAlignment:1 }))[0]
+    let locale = (await mongo.find('localeFiles', {_id: 'ENG_US'}))[0]
     if(tbDef?.reconZoneDefinition && tbData.reconZoneStatus){
       for(let i in tbData.reconZoneStatus){
-        const pDef = tbDef?.reconZoneDefinition?.find(x=>x?.zoneDefinition?.zoneId === tbData.reconZoneStatus[i].zoneStatus?.zoneId)
-        const zDef = tbDef?.conflictZoneDefinition?.find(x=>x?.zoneDefinition?.zoneId === pDef?.zoneDefinition?.linkedConflictId)
+        let pDef = tbDef?.reconZoneDefinition?.find(x=>x?.zoneDefinition?.zoneId === tbData.reconZoneStatus[i].zoneStatus?.zoneId)
+        let zDef = tbDef?.conflictZoneDefinition?.find(x=>x?.zoneDefinition?.zoneId === pDef?.zoneDefinition?.linkedConflictId)
         let alignment = tbDef?.forceAlignment
         if(zDef?.forceAlignment > alignment) alignment = zDef.forceAlignment
         let phase = await GetPhase(tbData.reconZoneStatus[i].zoneStatus?.zoneId)
@@ -89,7 +90,7 @@ const MapPlatoons = async(tbData = {})=>{
         if(!platoons[id]) platoons[id] = { id: id, phase: phase, conflict: conflict, squads: [], type: type, sort: sort, totalPoints: 0, maxUnit: pDef?.zoneDefinition?.maxUnitCountPerPlayer }
         if(!platoons[id].nameKey) platoons[id].nameKey = locale[pDef?.zoneDefinition?.nameKey] || pDef?.zoneDefinition?.nameKey
         for(let p in tbData.reconZoneStatus[i].platoon){
-          const squad = await GetSquads(tbData.reconZoneStatus[i].platoon[p]?.squad, pDef?.platoonDefinition.find(x=>x?.id === tbData.reconZoneStatus[i].platoon[p]?.id), pDef?.unitRarity, pDef?.unitRelicTier)
+          let squad = await GetSquads(tbData.reconZoneStatus[i].platoon[p]?.squad, pDef?.platoonDefinition.find(x=>x?.id === tbData.reconZoneStatus[i].platoon[p]?.id), pDef?.unitRarity, pDef?.unitRelicTier)
           if(squad){
             platoons[id].totalPoints += squad.points || 0
             platoons[id].squads.push(squad)
@@ -99,17 +100,17 @@ const MapPlatoons = async(tbData = {})=>{
     }
     await mongo.set('tbPlatoons', {_id: tbData.definitionId}, {id: tbData.definitionId, nameKey: tbDef.nameKey, platoons: Object.values(platoons)})
   }catch(e){
-    console.error(e);
+    throw(e);
   }
 }
 const SyncPlatoons = async()=>{
   try{
     unitList = await getUnitList()
     if(unitList && Object.values(unitList)?.length > 0){
-      const tbs = (await mongo.find('autoComplete', {_id: 'tb-name'}))[0]
+      let tbs = (await mongo.find('autoComplete', {_id: 'tb-name'}))[0]
       if(tbs?.data?.length > 0){
         for(let i in tbs.data){
-          const tbData = (await mongo.aggregate('tbCache', { definitionId: tbs.data[i].value }, [{ $sort: {currentRoundEndTime: -1} }, { $limit: 10 }]))[0]
+          let tbData = (await mongo.aggregate('tbCache', { definitionId: tbs.data[i].value }, [{ $sort: {currentRoundEndTime: -1} }, { $limit: 10 }]))[0]
           if(tbData?.definitionId && tbData.reconZoneStatus.filter(x=>x.platoon.length > 0).length === tbData.reconZoneStatus.length) await MapPlatoons(tbData)
         }
       }
@@ -117,7 +118,7 @@ const SyncPlatoons = async()=>{
     unitList = {}
     setTimeout(SyncPlatoons, 30000)
   }catch(e){
-    console.error(e);
+    log.error(e);
     setTimeout(SyncPlatoons, 30000)
   }
 }
