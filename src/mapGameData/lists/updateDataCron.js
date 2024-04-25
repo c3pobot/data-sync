@@ -1,7 +1,7 @@
 'use strict'
 const fs = require('fs')
 const GetImages = require('../getImages')
-let pct = require(`${baseDir}/src/enums/pct`)
+let pct = require(`src/enums/pct`)
 const mongo = require('mongoclient')
 
 const ReadFile = require('./readFile')
@@ -163,6 +163,7 @@ module.exports = async(errObj = {}, assetVersion)=>{
       for(let i in crons){
         if(crons[i].id) await mongo.set('datacronList', {_id: crons[i].id}, crons[i])
       }
+      await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.datacron-set': 'datacron-set' })
       if(images?.length > 0 && assetVersion){
         GetImages(images, assetVersion, 'thumbnail', 'datacronList')
       }

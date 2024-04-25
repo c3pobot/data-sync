@@ -1,7 +1,7 @@
 'use strict'
 const ReadFile = require('./readFile')
 const GetAbilityList = require('./getAbilityList')
-const enumOmicron = require(`${baseDir}/src/enums/omicrons`)
+const enumOmicron = require(`src/enums/omicrons`)
 module.exports = async(errObj)=>{
   try {
     let abilityList = await GetAbilityList(errObj)

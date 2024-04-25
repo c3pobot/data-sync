@@ -1,7 +1,12 @@
-const log = require('logger')
-const imagesToIgnore = require(`${baseDir}/src/enums/imagestoignore.json`)
-const saveImage = require('./saveImage')
-const mongo = require('mongoclient')
+const log = require('logger');
+const imagesToIgnore = require(`src/enums/imagestoignore.json`);
+const saveImage = require('./saveImage');
+const rabbitmq = require('src/rabbitmq')
+
+const POD_NAME = process.env.POD_NAME || 'data-sync', SET_NAME = process.env.SET_NAME || 'data-sync', NAME_SPACE = process.env.NAME_SPACE || 'default'
+let queName = `${NAME_SPACE}.worker.assets`, consumer
+
+
 const checkAssetName = (img)=>{
   try{
     if(!img) return
@@ -11,49 +16,44 @@ const checkAssetName = (img)=>{
     throw(e);
   }
 }
-const checkMissing = async()=>{
+const checkImage = async(obj = {})=>{
   try{
-    let list = await mongo.find('missingAssets', {})
-    if(list?.length > 0){
-      let i = list.length
-      while(i--) await saveImages(list[i].imgs, list[i].assetVersion, list[i].dir, list[i]._id)
-    }
-    setTimeout(checkMissing, 30000)
-  }catch(e){
-    console.error(e);
-    setTimeout(checkMissing, 5000)
-  }
-}
-const saveImages = async(imgs = [], assetVersion, dir, collectionId)=>{
-  try{
-    if(imgs.length === 0 || !assetVersion || !dir) return
-    let errored = []
-    log.info(`Trying download of ${imgs?.length} images for version ${assetVersion} to ${dir} for ${collectionId}...`)
-    let i = imgs.length
-    while(i--){
-      if(imagesToIgnore.filter(x=>x === imgs[i]).length > 0) continue;
-      let status = await checkAssetName(imgs[i])
-      if(!status) continue
-      status = await saveImage(assetVersion, imgs[i], dir)
-      if(!status) errored.push(imgs[i])
-    }
-    if(errored.length > 0){
-      log.info(`Missing ${errored.length}/${imgs?.length} images for version ${assetVersion} to ${dir} for ${collectionId}...`)
-      await mongo.set('missingAssets', {_id: collectionId}, {imgs: errored, dir: dir, assetVersion: assetVersion})
-    }else{
-      await mongo.del('missingAssets', {_id: collectionId})
-      log.info(`Saved ${imgs.length} images for version ${assetVersion} to ${dir} for ${collectionId}...`)
-    }
+    if(imagesToIgnore.filter(x=>x === obj.img).length > 0) return;
+    let status = checkAssetName(obj.img)
+    if(!status) return
+    status = await saveImage(obj.assetVersion, obj.img, obj.dir)
+    if(!status?.etag) return 1
+    log.info(`saved ${obj.img} to ${obj.dir}...`)
   }catch(e){
     throw(e)
   }
 }
-const CheckMongo = ()=>{
-  let status = mongo.status()
-  if(status){
-    checkMissing()
-    return
+const processMsg = async(msg = {})=>{
+  try{
+    if(!msg.body) return
+    return await checkImage(msg.body)
+  }catch(e){
+    log.error(e)
+    return 1
   }
-  setTimeout(CheckMongo, 5000)
 }
-CheckMongo()
+const startConsumer = async()=>{
+  try{
+    if(!rabbitmq.ready){
+      setTimeout(startConsumer, 5000)
+      return
+    }
+    if(consumer) await consumer.close()
+    consumer = rabbitmq.createConsumer({ consumerTag: POD_NAME, concurrency: 1, qos: { prefetchCount: 1 }, queue: queName, queueOptions: { durable: true, arguments: { 'x-queue-type': 'quorum', 'x-message-ttl': 600000 } } }, processMsg)
+    consumer.on('error', (err)=>{
+      log.info(err)
+    })
+    consumer.on('ready', ()=>{
+      log.info(`${POD_NAME} asset consumer created...`)
+    })
+  }catch(e){
+    log.error(e)
+    setTimeout(startConsumer, 5000)
+  }
+}
+startConsumer()

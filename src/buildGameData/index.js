@@ -2,7 +2,7 @@
 const log = require('logger')
 const fs = require('fs')
 const mongo = require('mongoclient')
-const { dataVersions } = require(`${baseDir}/src/dataVersions`)
+const { dataVersions } = require(`src/dataVersions`)
 
 const dataList = [
   'statDefMap',

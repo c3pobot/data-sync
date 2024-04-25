@@ -2,7 +2,7 @@ const log = require('logger')
 const minio = require('./minio')
 const fs = require('fs')
 const path = require('path')
-const swgohClient = require(`${baseDir}/src/client`)
+const swgohClient = require(`src/client`)
 const mongo = require('mongoclient')
 const checkFile = async(fileName, version, force)=>{
   try{

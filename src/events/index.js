@@ -4,7 +4,7 @@ const mongo = require('mongoclient')
 const CheckIdentity = require('./checkIdentity')
 const AuthGuest = require('./authGuest')
 const updateGameEvents = require('./updateGameEvents')
-const swgohClient = require(`${baseDir}/src/client`)
+const swgohClient = require(`src/client`)
 const { guestAccount } = require('./guestAccount')
 
 module.exports = async()=>{
@@ -38,6 +38,6 @@ module.exports = async()=>{
       log.error('Error with Guest getInitialData for events update ...')
     }
   }catch(e){
-    log.error(e)
+    throw(e)
   }
 }

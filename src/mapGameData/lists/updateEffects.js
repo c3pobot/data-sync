@@ -1,7 +1,7 @@
 'use strict'
 const mongo = require('mongoclient')
 const ReadFile = require('./readFile')
-const effectMap = require(`${baseDir}/src/enums/effectMap`)
+const effectMap = require(`src/enums/effectMap`)
 let langArray, abilityList, effectList, lang, effects, units, missingEffects
 const CleanEffectName = (string)=>{
   if(string){
@@ -248,7 +248,10 @@ module.exports = async(errObj)=>{
         if(effects[i].nameKey && effects[i].units?.length > 0 && effects[i].id && effectAutoComplete.filter(x=>x.name === effects[i].nameKey).length === 0) effectAutoComplete.push({name: effects[i].nameKey, value: effects[i].id})
       }
     }
-    if(effectAutoComplete?.length > 0) await mongo.set('autoComplete', {_id: 'effect'}, {include: true, data: effectAutoComplete})
+    if(effectAutoComplete?.length > 0){
+      await mongo.set('autoComplete', {_id: 'effect'}, {include: true, data: effectAutoComplete})
+      await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.effect': 'effect' })
+    }
     if(missingEffects?.length > 0){
       for(let i in missingEffects){
         if(missingEffects[i].units?.length > 0) await mongo.set('missingEffects', {_id: missingEffects[i].tag}, missingEffects[i])

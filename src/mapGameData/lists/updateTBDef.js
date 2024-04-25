@@ -65,6 +65,7 @@ module.exports = async(errObj)=>{
       await mongo.set('tbDefinition', {_id: tbDef[i].id}, tbDef[i])
     }
     await mongo.set('autoComplete', {_id: 'tb-name'}, {data: autocomplete, include: true})
+    await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.tb-name': 'tb-name', 'data.ga-date': 'ga-date' })
     errObj.complete++
   }catch(e){
     throw(e)

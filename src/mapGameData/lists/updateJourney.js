@@ -216,7 +216,10 @@ module.exports = async(errObj = {})=>{
       }
       let manualGuides = (await mongo.find('botSettings', {_id: 'manualGuides'}))[0]
       if(manualGuides?.data?.length > 0) autoComplete = autoComplete.concat(manualGuides.data)
-      if(autoComplete?.length > 0) await mongo.set('autoComplete', {_id: 'journey'}, {data: autoComplete, include: true})
+      if(autoComplete?.length > 0){
+        await mongo.set('autoComplete', {_id: 'journey'}, {data: autoComplete, include: true})
+        await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.journey': 'journey' })
+      }
       errObj.complete++
     }else{
       errObj.error++

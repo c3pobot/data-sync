@@ -5,7 +5,7 @@ const ReadFile = require('./readFile')
 const GetSkillList = require('./getSkillList')
 const GetFactionList = require('./getFactionList')
 const GetImages = require('../getImages')
-const enumOmicron = require(`${baseDir}/src/enums/omicrons`)
+const enumOmicron = require(`src/enums/omicrons`)
 const OmiType = (descKey)=>{
   try{
     if(descKey){
@@ -139,6 +139,7 @@ module.exports = async(errObj, assetVersion)=>{
       }
       await mongo.set('autoComplete', {_id: 'unit'}, {include: true, data: unitsAutoComplete})
       await mongo.set('autoComplete', {_id: 'faction'}, {include: true, data: factionAutoComplete})
+      await mongo.set('autoComplete', {_id: 'nameKeys'}, { include: false, 'data.unit': 'unit', 'data.leader': 'unit', 'data.unit1': 'unit', 'data.unit2': 'unit', 'data.unit3': 'unit', 'data.unit4': 'unit', 'data.faction': 'faction' })
       skillList = null
       factionList = null
       obj = null

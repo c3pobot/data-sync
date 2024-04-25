@@ -1,7 +1,7 @@
 'use strict'
 const fs = require('fs')
 const ReadFile = require('./readFile')
-const altName = require(`${baseDir}/src/enums/alternateFactionNames`)
+const altName = require(`src/enums/alternateFactionNames`)
 module.exports = async(errObj)=>{
   try {
     let lang = await ReadFile(`${baseDir}/data/files/Loc_ENG_US.txt.json`)

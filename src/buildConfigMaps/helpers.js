@@ -4,8 +4,8 @@ const path = require('path')
 const fs = require('fs')
 const DATA_PATH = process.env.DATA_PATH || path.join(baseDir, 'data', 'files')
 
-const pct = require(`${baseDir}/src/enums/pct`)
-const enumOmicron = require(`${baseDir}/src/enums/omicrons`)
+const pct = require(`src/enums/pct`)
+const enumOmicron = require(`src/enums/omicrons`)
 const readFile = (file, version)=>{
   try{
     if(!file || !version) throw('readFile info not provided '+file+' '+version)

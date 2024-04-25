@@ -3,7 +3,7 @@ const mongo = require('mongoclient')
 const fs = require('fs')
 const ReadFile = require('./readFile')
 const GetImages = require('../getImages')
-const raidTokens = require(`${baseDir}/src/enums/raidTokens`)
+const raidTokens = require(`src/enums/raidTokens`)
 const getRewards = async(preview, lang = {}, rewardList = [], images = [])=>{
   try{
     if(!preview) return
@@ -86,7 +86,10 @@ module.exports = async(errObj, assetVersion)=>{
       if(raid?.nameKey && raid?.id) autoComplete.push({name: raid.nameKey, value: raid.id})
     }
     if(images.length > 0 && assetVersion) GetImages(images, assetVersion, 'thumbnail', 'raidList')
-    if(autoComplete?.length > 0) await mongo.set('autoComplete', {_id: 'raid'}, {data: autoComplete, include: true})
+    if(autoComplete?.length > 0){
+      await mongo.set('autoComplete', {_id: 'raid'}, {data: autoComplete, include: true})
+      await mongo.set('autoComplete', {_id: 'nameKeys'}, { include: false, 'data.raid': 'raid' })
+    }
     errObj.complete++
     guildRaidList = null
     campainList = null

@@ -1,4 +1,5 @@
 'use strict'
+const log = require('logger')
 const path = require('path')
 const fetch = require('./fetch')
 const GAME_CLIENT_URL = process.env.GAME_CLIENT_URL || 'http://localhost:3000'
@@ -9,12 +10,12 @@ const GETRoutes = {'enums': 'enums'}
 const requestWithRetry = async(uri, opts = {}, count = 0)=>{
   try{
     let res = await fetch(uri, opts)
-    if(res?.error === 'FetchError' || res?.body?.code === 6 || (res?.status === 400 && res?.body?.message)){
+    if(res?.error === 'FetchError' || res?.body?.code === 6 || (res?.status === 400 && res?.body?.message && res?.body?.code !== 4)){
       if(count < retryCount){
         count++
         return await requestWithRetry(uri, opts, count)
       }else{
-        throw(`tried request ${count} time(s) and errored with ${res.error} : ${res.message}`)
+        log.error(`tried request ${count} time(s) and errored with ${res.error} : ${res.message}`)
       }
     }
     return res
@@ -36,6 +37,7 @@ module.exports = async(uri, payload, identity = null)=>{
     if(obj?.body) return obj.body
     return await parseResponse(obj)
   }catch(e){
+    log.error(uri)
     throw(e)
   }
 }
