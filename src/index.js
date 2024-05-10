@@ -2,18 +2,32 @@
 const log = require('logger')
 let logLevel = process.env.LOG_LEVEL || log.Level.INFO;
 log.setLevel(logLevel);
-require('./assetGetter')
+//require('./assetGetter')
 
 const mongo = require('mongoclient')
-const topicPublisher = require('./topicPublisher')
-const swgohClient = require('./client')
+const excahnge = require('./helpers/excahnge')
+const swgohClient = require('./swgohClient')
+const gitClient = require('./gitClient')
 //const consumer = require('./consumer')
 const mapPlatoons = require('./mapPlatoons')
 const checkEvents = require('./events')
 const updateData = require('./updateData')
-const { dataVersions } = require('./dataVersions')
+const { dataVersions } = require('./helpers/dataVersions')
 const UPDATE_INTERVAL = +process.env.UPDATE_INTERVAL || 30
-
+const GIT_REPO = process.env.GIT_DATA_REPO, DATA_DIR = process.env.DATA_DIR || '/app/data/files'
+const cloneGameData = async()=>{
+  try{
+    let status = await gitClient.clone({ repo: GIT_REPO, dir: DATA_DIR })
+    if(status?.code === 0){
+      checkTopicPublisher()
+      return
+    }
+    setTimeout(cloneGameData, 5000)
+  }catch(e){
+    log.error(e)
+    setTimeout(cloneGameData, 5000)
+  }
+}
 const checkTopicPublisher = ()=>{
   try{
     let status = topicPublisher.status()
@@ -94,7 +108,7 @@ const startSync = async()=>{
       }
       if(!updateNeeded){
         let mapDataVersions = await mongo.find('versions', {}, { gameVersion: 1, localeVersion: 1 })
-        if(mapDataVersions && mapDataVersions?.length !== 17) updateNeeded = true
+        if(mapDataVersions && mapDataVersions?.length !== 19) updateNeeded = true
         if(mapDataVersions?.length > 0) mapDataVersions = mapDataVersions.filter(x=>x.gameVersion !== obj?.latestGamedataVersion || x.localeVersion !== obj?.latestLocalizationBundleVersion)
         if(mapDataVersions?.length > 0) updateNeeded = true
       }
@@ -140,4 +154,4 @@ const updateDataCronAutoComplete = async()=>{
   }
 }
 
-checkTopicPublisher()
+cloneGameData()

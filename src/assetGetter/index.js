@@ -1,32 +1,25 @@
 const log = require('logger');
-const imagesToIgnore = require(`src/enums/imagestoignore.json`);
+const imagestoignore = require(`src/enums/imagestoignore.json`);
 const saveImage = require('./saveImage');
-const rabbitmq = require('src/rabbitmq')
+const rabbitmq = require('src/helpers/rabbitmq')
 
-const POD_NAME = process.env.POD_NAME || 'data-sync', SET_NAME = process.env.SET_NAME || 'data-sync', NAME_SPACE = process.env.NAME_SPACE || 'default'
-let queName = `${NAME_SPACE}.worker.assets`, consumer
+let POD_NAME = process.env.POD_NAME || 'data-sync', SET_NAME = process.env.SET_NAME || 'data-sync', NAME_SPACE = process.env.NAME_SPACE || 'default', QUE_NAME = process.env.WORKER_QUE_NAME_SPACE || process.env.NAME_SPACE || 'default'
+QUE_NAME += '.worker.assets'
+let consumer, imagesToIgnore = new Set(imagestoignore)
 
 
 const checkAssetName = (img)=>{
-  try{
-    if(!img) return
-    if(img.startsWith('icon_stat_')) return;
-    return true
-  }catch(e){
-    throw(e);
-  }
+  if(!img) return
+  if(img.startsWith('icon_stat_')) return;
+  return true
 }
 const checkImage = async(obj = {})=>{
-  try{
-    if(imagesToIgnore.filter(x=>x === obj.img).length > 0) return;
-    let status = checkAssetName(obj.img)
-    if(!status) return
-    status = await saveImage(obj.assetVersion, obj.img, obj.dir)
-    if(!status?.etag) return 1
-    log.info(`saved ${obj.img} to ${obj.dir}...`)
-  }catch(e){
-    throw(e)
-  }
+  if(!obj.img) return
+  if(imagesToIgnore?.has(obj.img) return;
+  if(obj.img.startsWith('icon_stat_')) return
+  let status = await saveImage(obj.assetVersion, obj.img, obj.dir)
+  if(!status) return 1
+  log.debug(`saved ${obj.img} to ${obj.dir}...`)
 }
 const processMsg = async(msg = {})=>{
   try{
@@ -37,14 +30,14 @@ const processMsg = async(msg = {})=>{
     return 1
   }
 }
-const startConsumer = async()=>{
+const start = async()=>{
   try{
     if(!rabbitmq.ready){
       setTimeout(startConsumer, 5000)
       return
     }
     if(consumer) await consumer.close()
-    consumer = rabbitmq.createConsumer({ consumerTag: POD_NAME, concurrency: 1, qos: { prefetchCount: 1 }, queue: queName, queueOptions: { durable: true, arguments: { 'x-queue-type': 'quorum', 'x-message-ttl': 600000 } } }, processMsg)
+    consumer = rabbitmq.createConsumer({ consumerTag: POD_NAME, concurrency: 1, qos: { prefetchCount: 1 }, queue: QUE_NAME, queueOptions: { durable: true, arguments: { 'x-queue-type': 'quorum' } } }, processMsg)
     consumer.on('error', (err)=>{
       log.info(err)
     })
@@ -56,4 +49,4 @@ const startConsumer = async()=>{
     setTimeout(startConsumer, 5000)
   }
 }
-startConsumer()
+start()

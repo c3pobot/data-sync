@@ -26,10 +26,10 @@
   "homepage": "https://gitlab.com/c3po-shard/datasync#readme",
   "dependencies": {
     "logger": "github:c3pobot/logger",
-    "minio": "^7.1.3",
     "mongoclient": "github:c3pobot/mongoclient",
     "node-fetch": "^2.6.7",
     "rabbitmq-client": "^4.5.3",
+    "shelljs": "^0.8.5",
     "uuid": "^8.3.2"
   }
 }

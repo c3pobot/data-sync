@@ -1,17 +1,21 @@
 'use strict'
 const log = require('logger')
-const { dataVersions } = require('./dataVersions')
+const mongo = require('mongoclient')
+const swgohClient = require('./swgohClient')
+const { dataVersions } = require('.helpers/dataVersions')
+
 const buildGameData = require('./buildGameData')
 const getGameFiles = require('./getGameFiles')
 const mapGameData = require('./mapGameData')
 const buildConfigMaps = require('./buildConfigMaps')
-const swgohClient = require('./client')
-const mongo = require('mongoclient')
-let routingKey = process.env.GAME_DATA_TOPIC || `default.data-sync.game-data`
-const topicPublisher = require('./topicPublisher')
+
+
+let NAME_SPACE = process.env.NAME_SPACE || 'default'
+let ROUTING_KEY = process.env.GAME_DATA_TOPIC || `${NAME_SPACE}.data-sync.game-data`
+const exchange = require('./helpers/exchange')
 const publishVersions = async()=>{
   try{
-    let status = await topicPublisher.send(routingKey, { gameVersion: dataVersions.gameVersion, localeVersion: dataVersions.localeVersion, timestamp: Date.now() })
+    let status = await exchange.send(ROUTING_KEY, { gameVersion: dataVersions.gameVersion, localeVersion: dataVersions.localeVersion, timestamp: Date.now() })
     if(status){
       log.info(`published new gameVersion ${dataVersions.gameVersion}... New localeVersion ${dataVersions.localeVersion} to rabbitmq...`)
       return
@@ -29,10 +33,10 @@ module.exports = async(force = false) =>{
     let metaData = await swgohClient('metadata');
     if(!metaData?.assetVersion || !metaData?.latestGamedataVersion || !metaData?.latestLocalizationBundleVersion) return
 
-    let remoteVersions = await getGameFiles(metaData, force)
-    if(!remoteVersions || remoteVersions.gameVersion !== metaData.latestGamedataVersion || remoteVersions.localeVersion !== metaData.latestLocalizationBundleVersion){
-      if(!force) return
-    }
+    let localVersions = await getGameFiles(metaData)
+    if(!localVersions) return
+    if(localVersions.gameVersion !== metaData.latestGamedataVersion || localVersions.localeVersion !== metaData.latestLocalizationBundleVersion) return
+
     let status = await buildConfigMaps(metaData.latestGamedataVersion, metaData.latestLocalizationBundleVersion, force)
     if(status && dataVersions.gameData !== metaData.latestGamedataVersion) status = await buildGameData(metaData.latestGamedataVersion)
     if(status) status = await mapGameData(metaData, force)

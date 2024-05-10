@@ -1,0 +1,21 @@
+'use strict'
+const Cmds = {}
+Cmds.recipe = require('./mapRecipe')
+Cmds.playerPortrait = require('./mapPlayerPortrait')
+Cmds.playerTitle = require('./mapPlayerTitle')
+Cmds.journeyGuide = require('./mapJourneyGuide')
+Cmds.datacron = require('./mapDataCron')
+Cmds.raidDef = require('./mapRaid')
+Cmds.tbDefinition = require('./mapTB')
+Cmds.skills = require('./mapSkills')
+Cmds.units = require('./mapUnits')
+Cmds.campaign = require('./mapCampain')
+Cmds.cqFeats = require('./mapConquestChallenge')
+Cmds.cqDef = require('./mapConquestDef')
+Cmds.dataDisc = require('./mapDataDisc')
+Cmds.equipment = require('./mapEquipment')
+Cmds.modsDef = require('./mapModDef')
+Cmds.scavengerGear = require('./mapScavengerDef')
+//Cmds.summonerData = require('./updateSummonerData')
+Cmds.effects = require('./mapEffects')
+module.exports = Cmds

@@ -11,7 +11,7 @@ RUN mkdir -p /app/data/files && chown -R node:node /app/data/files
 RUN apk update && \
   # wrap process in --init in order to handle kernel signals
   # https://github.com/krallin/tini#using-tini
-  apk add --no-cache tini && \
+  apk add --no-cache tini git && \
   rm -rf /var/cache/apk/*
 
 COPY --from=builder node_modules node_modules/
