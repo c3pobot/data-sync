@@ -10,7 +10,7 @@ module.exports = async(gameVersion, localeVersion)=>{
   let list = {}
   for(let i in obj){
     if(!obj[i].id) continue
-    let tempObj = { baseId: obj[i].id, nameKey: lang[obj[i].descKey], search: lang[obj[i].descKey]?.toLowerCase(), uiFilter: (obj[i]f.uiFilter?.length > 0 ? true:false), units:[] }
+    let tempObj = { baseId: obj[i].id, nameKey: lang[obj[i].descKey], search: lang[obj[i].descKey]?.toLowerCase(), uiFilter: (obj[i]?.uiFilter?.length > 0 ? true:false), units:[] }
     if(altName[obj[i].id]){
       tempObj.nameKey = altName[obj[i].id]
       tempObj.search = altName[obj[i].id]?.toLowerCase()

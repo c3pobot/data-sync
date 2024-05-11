@@ -45,7 +45,7 @@ const mapPromotion = (promotionId, promotionRecipeId, dataList = {})=>{
   for(let i in tempObj.ingredients) mapPromotionIngredients(tempObj.ingredients[i], dataList)
   return tempObj
 }
-const mapStatMod = (statMod = {}, dataList = {})=>{
+const mapStatMod = async(statMod = {}, dataList = {})=>{
   let tempObj = { id: statMod.id, slot: +statMod.slot - 1, rarity: +statMod.rarity, setId: +statMod.setId, level : { id: statMod.levelTableId, table: dataList.xpTableList.find(x=>x.id === statMod.levelTableId)?.row || [] }}
   if(statMod.promotionId) tempObj.promotion = mapPromotion(statMod.promotionId, statMod.promotionRecipeId, dataList)
   if(statMod.tierUpRecipeTableId) tempObj.tier = mapTierUpRecipe(statMod.tierUpRecipeTableId, dataList)

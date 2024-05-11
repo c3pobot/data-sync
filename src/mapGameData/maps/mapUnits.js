@@ -30,18 +30,18 @@ const mapUnits = async(unit = {}, lang = {}, skillList = {}, abilityList = [], f
   let tempObj = { baseId: unit.baseId, nameKey: lang[unit.nameKey], combatType: unit.combatType, thumbnailName: unit.thumbnailName, categoryId: unit.categoryId, alignment: alignment, skills:{}, ultimate:{}, faction:{}, isGL: isGl, offenseStatId: offenseStatId }
 
   if(unit.combatType == 2 && unit.crew && unit.crew.length > 0) tempObj.crew = unit.crew.map(x=>x.unitId)
-  mapSkillReference(unit.skillReference, unit, lang, skillList, updateOmi)
+  mapSkillReference(unit.skillReference, tempObj, lang, skillList, updateOmi)
   if(+unit.combatType == 2 && unit.crew?.length > 0) {
-    for(let i in unit.crew) mapSkillReference(crew[i].skillReference, unit, lang, skillList, updateOmi)
+    for(let i in unit.crew) mapSkillReference(unit.crew[i].skillReference, tempObj, lang, skillList, updateOmi)
   }
   for(let i in unit.categoryId){
     if(factionList[unit.categoryId[i]]?.units?.filter(x=>x === unit.baseId).length == 0) factionList[unit.categoryId[i]].units.push(unit.baseId)
     tempObj.faction[unit.categoryId[i]] = 1
   }
   if(unit.limitBreakRef.filter(x=>x.powerAdditiveTag === 'ultimate').length > 0 && unit.legend){
-    for(let t in unit.limitBreakRef){
+    for(let i in unit.limitBreakRef){
       if(unit.limitBreakRef[i].powerAdditiveTag !== 'ultimate') continue
-      let ultAbility = abilityList.find(x=>x.id == unit.limitBreakRef[t].abilityId)
+      let ultAbility = abilityList.find(x=>x.id == unit.limitBreakRef[i].abilityId)
       if(!ultAbility) continue
       tempObj.ultimate[ultAbility.id] = { id: ultAbility.id, nameKey: lang[ultAbility.nameKey], descKey: (lang[ultAbility.id.toUpperCase()+'_DESC'] ? lang[ultAbility.id.toUpperCase()+'_DESC']:null) }
     }
@@ -66,13 +66,13 @@ module.exports = async(gameVersion, localeVersion, assetVersion)=>{
   if(!skillList || !factionList || !unitList || unitList?.length == 0 || !abilityList || !effectList || !lang) return
 
   let unitsAutoComplete = [], images = [], updateOmi = [], i = unitList.length, array = []
-  while(i--) array.push(mapUnits(unitList[i], lang, skillList, abilityList factionList, images, unitsAutoComplete, updateOmi))
+  while(i--) array.push(mapUnits(unitList[i], lang, skillList, abilityList, factionList, effectList, images, unitsAutoComplete, updateOmi))
   await Promise.all(array)
   await Promise.all(updateOmi)
 
   let factionArray = [], factionAutoComplete = []
   for(let i in factionList){
-    if(factionList[i].baseId.startsWith('special') || !factionList[i].nameKey || factionList[i].nameKey == 'Placeholder' || !factionList[i].uiFilter)
+    if(factionList[i].baseId.startsWith('special') || !factionList[i].nameKey || factionList[i].nameKey == 'Placeholder' || !factionList[i].uiFilter) continue
     factionArray.push(mapFactions(factionList[i], factionAutoComplete))
   }
   await Promise.all(factionArray)

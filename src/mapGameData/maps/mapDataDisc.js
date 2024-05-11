@@ -2,7 +2,7 @@
 const mongo = require('mongoclient')
 const getFile = require('src/helpers/getFile')
 
-const mapDiscDef = (discDef = {}, lang = {})=>{
+const mapDiscDef = async(discDef = {}, lang = {})=>{
   discDef.nameKey = lang[discDef.nameKey] || discDef.nameKey
   if(lang[discDef.descriptionKey]) discDef.descriptionKey = lang[discDef.descriptionKey].replace(/\//g, '').replace(/\[c\]/g, '').replace(/\[FFFF33\]/g, '').replace(/\[ffff33\]/g, '').replace(/\[-\]/g, '').replace(/\[-\]/g, '').replace(/\\n/g, '<br>')
   await mongo.set('dataDisc', {_id: discDef.id}, discDef)

@@ -1,12 +1,12 @@
 'use strict'
 const enumOmicron = require(`src/enums/omicrons`)
-const mapSkillTiers = (tier = [], skill = {})=>{
+const mapSkillTiers = (tiers = [], skill = {})=>{
   if(!tiers || tiers?.length == 0) return
   for(let i in tiers){
-    if(tier[i].isZetaTier && (skill.zetaTier > +t || skill.zetaTier === 0)){
+    if(tiers[i].isZetaTier && skill.zetaTier === 0){
       skill.isZeta = true, skill.zetaTier = +i + 2;
     }
-    if(tier[i].isOmicronTier && (skill.omiTier > +t || skill.omiTier === 0)){
+    if(tiers[i].isOmicronTier && skill.omiTier === 0){
       skill.isOmi = true, skill.omiTier = +i + 2;
     }
   }
@@ -27,8 +27,8 @@ const getSkillType = (id) =>{
   }
 }
 module.exports = (skillList = [], abilityList = [], lang = {}, excludeDesc = false)=>{
-  let list = {}, i = skillList?.length
-  while(i--){
+  let list = {}
+  for(let i in skillList){
     let s = skillList[i]
     let ability = abilityList.find(x=>x.id === s.abilityReference)
     if(!ability || !lang[ability?.nameKey]) continue;

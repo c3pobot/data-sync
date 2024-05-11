@@ -1,4 +1,5 @@
 'use strict'
+const log = require('logger')
 const mongo = require('mongoclient')
 const getFile = require('src/helpers/getFile')
 const getSkillList = require('./getSkillList')
@@ -13,10 +14,10 @@ const mapUnitSkill = (skillReference = [], skill = {}, skillList = {})=>{
 }
 const mapUnits = (unitList = [], skillList = {}, lang = {})=>{
   if(!unitList || unitList?.length == 0) return
-  let res = [], i = unitsList.length
+  let res = [], i = unitList.length
   while(i--){
-    let tempObj = { baseId: units[i].baseId, skills: {}, nameKey: lang[units[i].nameKey] || units[i].nameKey }
-    mapUnitSkill(units[i].skillReference, tempObj.skills, skillList)
+    let tempObj = { baseId: unitList[i].baseId, skills: {}, combatType: unitList[i].combatType, nameKey: lang[unitList[i].nameKey] || unitList[i].nameKey }
+    mapUnitSkill(unitList[i].skillReference, tempObj.skills, skillList)
     res.push(tempObj)
   }
   return res
@@ -47,14 +48,14 @@ const addTags = (unit = {}, skill = {}, tags = [])=>{
     if(effect.units.filter(x=>x.skillId === skill.id).length === 0 )  effect.units.push(tempUnit)
   }
 }
-const checkUnit = (unit, abilityList, effectList)=>{
+const checkUnit = async(unit, abilityList, effectList)=>{
   if(!unit.skills) return
   for(let i in unit.skills){
     let tempSkill = checkSkill(unit.skills[i])
     if(tempSkill){
       tempSkill.unitNameKey = unit.nameKey
       tempSkill.unitBaseId = unit.baseId
-      mongo.set('mechanics', { _id: unit.skills[i].id }, JSON.parse(JSON.stringify(tempSkill)))
+      //mongo.set('mechanics', { _id: unit.skills[i].id }, JSON.parse(JSON.stringify(tempSkill)))
       if(tempSkill?.tags?.length > 0) addTags(unit, unit.skills[i], tempSkill.tags)
     }
   }
@@ -78,7 +79,7 @@ const checkSkill = (skill)=>{
     if(!tempTier) continue
     tempTier.cooldownMaxOverride = ability.tier[i].cooldownMaxOverride
     tempSkill.tiers.push(tempTier)
-    if(tempTier.tags?.length > 0) await MergeTags(tempSkill.tags, tempTier.tags)
+    if(tempTier.tags?.length > 0) mergeTags(tempSkill.tags, tempTier.tags)
   }
   return tempSkill
 }
@@ -112,7 +113,7 @@ const checkEffect = (id)=>{
 }
 const checkTags = (effect)=>{
   let tags = []
-  if(effect.descriptiveTag?.filter(x=>x.tag.startsWith('countable_')).length == 0) return tags
+  if(effect.descriptiveTag?.filter(x=>x.tag.startsWith('countable_') || x.tag.startsWith('armorshred_')).length == 0) return tags
   for(let i in effect.descriptiveTag){
     let tempTag = checkTag(effect.descriptiveTag[i].tag, effect)
     if(tempTag) tags.push(tempTag)
@@ -168,15 +169,16 @@ module.exports = async(gameVersion, localeVersion)=>{
 
   langArray = Object.keys(tempLang), abilityList = tempAbilityList, effectList = tempEffectList, lang = tempLang, effects = []
   if(!langArray) return
-
+  let manualEffects = new Set(Object.values(effectMap))
   for(let i in lang){
-    if(!lang[i] || !i.startsWith('BattleEffect_')) continue
+    if(!lang[i] || (!i.startsWith('BattleEffect_') && !manualEffects?.has(i))) continue
     let effectName = cleanEffectName(lang[i]), tempName, nameKey, descKey
     if(effectName) tempName = effectName.split(":")
     if(tempName){
       if(tempName[0]) nameKey = tempName[0].trim()
       if(tempName[1]) descKey = tempName[1].trim()
     }
+
     if(!nameKey) continue
     if(effects.filter(x=>x.nameKey === nameKey).length === 0){
       let tempObj = { id: i.trim(), nameKey: nameKey, descKey: descKey, locKeys: [], tags: [], units: [] }
@@ -186,19 +188,25 @@ module.exports = async(gameVersion, localeVersion)=>{
       effects.filter(x=>x.nameKey === nameKey)[0]?.locKeys?.push(i.trim())
     }
   }
-
-  let tempObj
-  for(let i in units) checkUnit(units[i], abilityList, effectList)
-  if(effects.length == 0) return
-  let effectAutoComplete = [], i = effects.length, array = []
-  while(i--){
-    if(effects[i].nameKey && effects[i].units?.length > 0 && effects[i].id && effectAutoComplete.filter(x=>x.name === effects[i].nameKey).length === 0) effectAutoComplete.push({name: effects[i].nameKey, value: effects[i].id})
-    array.push(mongo.set('effects', {_id: effects[i].id}, effects[i]))
-  }
+  let array = []
+  for(let i in units) array.push(checkUnit(units[i], abilityList, effectList))
   await Promise.all(array)
+  effects = effects?.filter(x=>x.units && x.units?.length > 0 && x.nameKey && x.id)
+  log.info(`finished mapping ${effects?.length} effects. adding to database...`)
+  if(effects.length == 0) return
+  let effectAutoComplete = [], count = 0
+  for(let i in effects){
+    if(effects[i].nameKey && effects[i].units?.length > 0 && effects[i].id){
+      //array.push(mongo.set('effects', {_id: effects[i].id}, effects[i]))
+      await mongo.set('effects', { _id: effects[i].id }, effects[i])
+      if(effectAutoComplete.filter(x=>x.name === effects[i].nameKey).length === 0) effectAutoComplete.push({name: effects[i].nameKey, value: effects[i].id})
+      count++
+    }
+  }
+  log.info(`added ${count} effects to the database...`)
   if(effectAutoComplete?.length > 0){
-    await mongo.set('autoComplete', { _id: 'effect' }, { include: true, data: effectAutoComplete })
-    await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.effect': 'effect' })
+    //await mongo.set('autoComplete', { _id: 'effect' }, { include: true, data: effectAutoComplete })
+    //await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.effect': 'effect' })
   }
   return true
 }

@@ -26,11 +26,11 @@ const mapDefinition = async(definition = {})=>{
   await mongo.set('cqDef', { _id: definition.id }, definition)
 }
 module.exports = async(gameVerion, localeVersion)=>{
-  let obj = await getFile('conquestDefinition', localeVersion)
-  if(!obj) return
+  let conquestDefinitionList = await getFile('conquestDefinition', gameVerion)
+  if(!conquestDefinitionList) return
 
-  let i = obj.length, array = []
-  while(i--) array.push(mapDefinition(obj[i]))
+  let i = conquestDefinitionList.length, array = []
+  while(i--) array.push(mapDefinition(conquestDefinitionList[i]))
   await Promise.all(array)
   return true
 }

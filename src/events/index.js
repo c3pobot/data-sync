@@ -4,7 +4,7 @@ const mongo = require('mongoclient')
 const CheckIdentity = require('./checkIdentity')
 const AuthGuest = require('./authGuest')
 const updateGameEvents = require('./updateGameEvents')
-const swgohClient = require(`src/client`)
+const swgohClient = require(`src/swgohClient`)
 const { guestAccount } = require('./guestAccount')
 
 module.exports = async()=>{

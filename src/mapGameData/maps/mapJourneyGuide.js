@@ -23,9 +23,9 @@ const mapUnits = (units = [], faction = {}, lang = {})=>{
     while(f--){
       if(!faction[units[i].categoryId[f]]) continue
       if(units[i].categoryId[f]?.startsWith('selftag')){
-        faction[units[i].categoryId[f]] = res[u.baseId]
+        faction[units[i].categoryId[f]] = res[units[i].baseId]
       }else{
-        faction[units[i].categoryId[f]]?.units.push(res[u.baseId])
+        faction[units[i].categoryId[f]]?.units.push(res[units[i].baseId])
       }
     }
   }
@@ -154,7 +154,7 @@ module.exports = async(gameVersion, localeVersion)=>{
     getFile('challenge', gameVersion),
     getFile('campaign', gameVersion)
   ])
-  if(!unitList || !lang || !factionList || !guideDefList, || !requirementList || !challengeList || campaignList) return
+  if(!unitList || !lang || !factionList || !guideDefList || !requirementList || !challengeList || !campaignList) return
 
   let campaign, units
   //let guideDef = files['unitGuideDefinition'].filter(x=>x.additionalActivationRequirementId)

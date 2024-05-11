@@ -31,7 +31,7 @@ const getSort = (type, conflict)=>{
   if(type === 'LS') return 3
   return +(conflict?.replace('C', ''))
 }
-const mapZoneDefinition(zoneDefinition = {}, territoryBattleZoneUnitType, forceAlignment, lang = {})=>{
+const mapZoneDefinition = (zoneDefinition = {}, territoryBattleZoneUnitType, forceAlignment, lang = {})=>{
   zoneDefinition.nameKey = lang[zoneDefinition?.nameKey] || zoneDefinition.nameKey
   zoneDefinition.phase = getPhase(zoneDefinition.zoneId)
   zoneDefinition.conflict = getConflict(zoneDefinition.zoneId)
@@ -55,7 +55,7 @@ module.exports = async(gameVersion, localeVersion)=>{
       getFile('Loc_ENG_US.txt', localeVersion)
     ])
     if(!territoryBattleDefinitionList || !lang) return
-    
+
     let autoComplete = [], i = territoryBattleDefinitionList.length, array = []
     while(i--) array.push(mapTBDef(territoryBattleDefinitionList[i], lang, autoComplete))
     await Promise.all(array)

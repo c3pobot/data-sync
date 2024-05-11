@@ -25,27 +25,27 @@ const checkData = async(gameVersion, localeVersion, assetVersion, force = false)
 }
 
 module.exports = async({ assetVersion, latestGamedataVersion, latestLocalizationBundleVersion }, force = false)=>{
-  let missing = await checkData(latestGamedataVersion, latestLocalizationBundleVersion, assetVersion, force)
-  if(!missing) return
+  try{
+    let missing = await checkData(latestGamedataVersion, latestLocalizationBundleVersion, assetVersion, force)
+    if(!missing) return
 
-  if(missing.length == 0) return true
+    if(missing.length == 0) return true
 
-  let status = true
-  log.info('Mapping GameData...')
-  for(let i in missing){
-    if(!status) break;
-    count++;
-    log.info(`updating collection ${missing[i]}...`)
-    status = await maps[missing[i]](latestGamedataVersion, latestLocalizationBundleVersion, assetVersion)
-    if(status){
-      totalCount++
-      await mongo.set('versions', { _id: missing[i] }, { assetVersion: assetVersion, gameVersion: latestGamedataVersion, localeVersion: latestLocalizationBundleVersion })
+    let status
+    log.info('Mapping GameData...')
+    for(let i in missing){
+      log.info(`updating collection ${missing[i]}...`)
+      status = await maps[missing[i]](latestGamedataVersion, latestLocalizationBundleVersion, assetVersion)
+      if(!status) break;
+      if(status) await mongo.set('versions', { _id: missing[i] }, { assetVersion: assetVersion, gameVersion: latestGamedataVersion, localeVersion: latestLocalizationBundleVersion })
     }
+    if(status){
+      log.info('Game Data mapping complete...')
+    }else{
+      log.error('Game data mapping error...')
+    }
+    return status
+  }catch(e){
+    log.error(e)
   }
-  if(status){
-    log.info('Game Data mapping complete...')
-  }else{
-    log.error('Game data mapping error...')
-  }
-  return status
 }

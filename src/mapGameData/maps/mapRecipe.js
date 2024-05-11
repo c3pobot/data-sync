@@ -11,7 +11,7 @@ const getTier = (string)=>{
   if(+res > 0) return +res
 }
 
-const getIngredients = (ingredients = [], materialList = [])=>{
+const getIngredients = (ingredients = [], lang = {}, materialList = [])=>{
   let res = [], i = ingredients.length
   while(i--){
     if(ingredients[i].id == 'GRIND') continue
@@ -21,10 +21,10 @@ const getIngredients = (ingredients = [], materialList = [])=>{
   }
   return res
 }
-const mapRecipe = (recipe, lang = {}, materialList = [])=>{
-  let tier = await getTier(recipe.id)
+const mapRecipe = async(recipe, lang = {}, materialList = [])=>{
+  let tier = getTier(recipe.id)
   let tempObj = { id: 'relic-'+tier, tier: tier, type: 'relic', ingredients: [] }
-  if(recipe.ingredients?.length > 0) tempObj.ingredients = getIngredients(relic.ingredients)
+  if(recipe.ingredients?.length > 0) tempObj.ingredients = getIngredients(recipe.ingredients, lang, materialList)
   await mongo.set('recipe', { _id: tempObj.id }, tempObj)
 }
 module.exports = async(gameVersion, localeVersion)=>{

@@ -1,6 +1,6 @@
 'use strict'
 const getSkill = require('./getSkill')
-const getCrewSkill = (crew = [], skillMap = {}, abilityList = [], effectList = [])=>{
+module.exports = (crew = [], skillMap = {}, abilityList = [], effectList = [])=>{
   let res = {}, i = crew.length
   if(i === 0) return
   while(i--){

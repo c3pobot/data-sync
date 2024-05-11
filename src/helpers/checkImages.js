@@ -1,7 +1,7 @@
 'use strict'
 const log = require('logger');
 const mongo = require('mongoclient')
-const rabbitmq = require('src/rabbitmq')
+const rabbitmq = require('./rabbitmq')
 const gitClient = require('src/gitClient')
 const GIT_REPO = process.env.GIT_ASSET_REPO, GIT_TOKEN = process.env.GIT_TOKEN
 

@@ -2,6 +2,7 @@
 .gitignore
 .env
 Dockerfile
+Dockerfile.dev
 node_modules
 data
 cache

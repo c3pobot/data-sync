@@ -1,15 +1,17 @@
 'use strict';
 const log = require('logger')
+const fs = require('fs')
 let logLevel = process.env.LOG_LEVEL || log.Level.INFO;
 log.setLevel(logLevel);
-//require('./assetGetter')
+require('./assetGetter')
 
 const mongo = require('mongoclient')
-const excahnge = require('./helpers/excahnge')
+const exchange = require('./helpers/exchange')
 const swgohClient = require('./swgohClient')
 const gitClient = require('./gitClient')
+const updateAutoComplete = require('./updateAutoComplete')
 //const consumer = require('./consumer')
-const mapPlatoons = require('./mapPlatoons')
+//const mapPlatoons = require('./mapPlatoons')
 const checkEvents = require('./events')
 const updateData = require('./updateData')
 const { dataVersions } = require('./helpers/dataVersions')
@@ -17,9 +19,14 @@ const UPDATE_INTERVAL = +process.env.UPDATE_INTERVAL || 30
 const GIT_REPO = process.env.GIT_DATA_REPO, DATA_DIR = process.env.DATA_DIR || '/app/data/files'
 const cloneGameData = async()=>{
   try{
-    let status = await gitClient.clone({ repo: GIT_REPO, dir: DATA_DIR })
-    if(status?.code === 0){
-      checkTopicPublisher()
+    let status
+    if(fs.existsSync(`${DATA_DIR}/.git`)) status = await gitClient.pull(DATA_DIR)
+    if(!status){
+      fs.rmSync(DATA_DIR, { recursive: true, force: true })
+      status = await gitClient.clone({ repo: GIT_REPO, dir: DATA_DIR })
+    }
+    if(status){
+      checkExchange()
       return
     }
     setTimeout(cloneGameData, 5000)
@@ -28,17 +35,17 @@ const cloneGameData = async()=>{
     setTimeout(cloneGameData, 5000)
   }
 }
-const checkTopicPublisher = ()=>{
+const checkExchange = ()=>{
   try{
-    let status = topicPublisher.status()
+    let status = exchange.status()
     if(status){
       checkMongo()
       return
     }
-    setTimeout(checkTopicPublisher, 5000)
+    setTimeout(checkExchange, 5000)
   }catch(e){
     log.error(e)
-    setTimeout(checkTopicPublisher, 5000)
+    setTimeout(checkExchange, 5000)
   }
 }
 const checkMongo = ()=>{
@@ -61,9 +68,8 @@ const checkAPIReady = async()=>{
       log.info('API is ready data-sync...')
       //StartConsumer()
       startSync()
-      updateDataCronAutoComplete()
       syncEvents()
-      mapPlatoons()
+      //mapPlatoons()
       return
     }
     setTimeout(checkAPIReady, 5000)
@@ -108,17 +114,20 @@ const startSync = async()=>{
       }
       if(!updateNeeded){
         let mapDataVersions = await mongo.find('versions', {}, { gameVersion: 1, localeVersion: 1 })
-        if(mapDataVersions && mapDataVersions?.length !== 19) updateNeeded = true
+        if(mapDataVersions && mapDataVersions?.length !== 17) updateNeeded = true
         if(mapDataVersions?.length > 0) mapDataVersions = mapDataVersions.filter(x=>x.gameVersion !== obj?.latestGamedataVersion || x.localeVersion !== obj?.latestLocalizationBundleVersion)
         if(mapDataVersions?.length > 0) updateNeeded = true
+      }
+      if(!updateNeeded){
+        await updateAutoComplete(obj)
       }
       if(updateNeeded){
         await updateData()
         dataVersions.updateInProgress = false
       }
     }
-    //setTimeout(StartSync, UPDATE_INTERVAL * 1000)
-    setTimeout(startSync, 5 * 1000)
+    setTimeout(StartSync, UPDATE_INTERVAL * 1000)
+    //setTimeout(startSync, 5 * 1000)
   }catch(e){
     log.error(e)
     setTimeout(startSync, 5 * 1000)
@@ -131,26 +140,6 @@ const syncEvents = async()=>{
   }catch(e){
     log.error(e)
     setTimeout(syncEvents, 5 * 1000)
-  }
-}
-const updateDataCronAutoComplete = async()=>{
-  try{
-    let obj = await mongo.find('datacronList', {}, {_id: 1, nameKey: 1, expirationTimeMs: 1})
-    if(obj?.length > 0){
-      let array = [], timeNow = Date.now()
-      for(let i in obj){
-        if(obj[i].expirationTimeMs && +obj[i].expirationTimeMs > +timeNow){
-          array.push({name: obj[i].nameKey, value: obj[i]._id})
-        }
-      }
-      if(array?.length > 0){
-        await mongo.set('autoComplete', {_id: 'datacron-set'}, { data: array, include: true })
-      }
-    }
-    setTimeout(updateDataCronAutoComplete, UPDATE_INTERVAL * 1000)
-  }catch(e){
-    log.error(e);
-    setTimeout(updateDataCronAutoComplete, 5 * 1000)
   }
 }
 

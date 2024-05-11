@@ -2,7 +2,8 @@
 const log = require('logger')
 const mongo = require('mongoclient')
 const swgohClient = require('./swgohClient')
-const { dataVersions } = require('.helpers/dataVersions')
+const updateAutoComplete = require('./updateAutoComplete')
+const { dataVersions } = require('./helpers/dataVersions')
 
 const buildGameData = require('./buildGameData')
 const getGameFiles = require('./getGameFiles')
@@ -40,6 +41,7 @@ module.exports = async(force = false) =>{
     let status = await buildConfigMaps(metaData.latestGamedataVersion, metaData.latestLocalizationBundleVersion, force)
     if(status && dataVersions.gameData !== metaData.latestGamedataVersion) status = await buildGameData(metaData.latestGamedataVersion)
     if(status) status = await mapGameData(metaData, force)
+    if(status) status = await updateAutoComplete(metaData, force)
     if(status){
       dataVersions.gameVersion = metaData.latestGamedataVersion
       dataVersions.localeVersion = metaData.latestLocalizationBundleVersion

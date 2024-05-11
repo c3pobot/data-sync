@@ -5,7 +5,7 @@ const checkImages = require('src/helpers/checkImages')
 const raidTokens = require(`src/enums/raidTokens`)
 
 const getRewards = (rankRewardPreview, lang = {}, mysteryBoxList = [], images = [])=>{
-  if(!preview) return
+  if(!rankRewardPreview) return
   let res = { rankStart: rankRewardPreview.rankStart, rankEnd: rankRewardPreview.rankEnd, loot: [] }
   res = {...res,...rankRewardPreview.primaryReward[0]}
   let reward = mysteryBoxList.find(x=>x.id === res.id)
@@ -68,14 +68,15 @@ module.exports = async(gameVersion, localeVersion, assetVersion)=>{
     getFile('guildRaid', gameVersion),
     getFile('campaign', gameVersion),
     getFile('mysteryBox', gameVersion),
-    getFile('Loc_ENG_US.txt', gameVersion)
+    getFile('Loc_ENG_US.txt', localeVersion)
   ])
   if(!guildRaidList || !campainList || !mysteryBoxList || !lang) return
 
   let guildCampaign = campainList?.find(x=>x.id === 'GUILD')
+
   if(!guildCampaign) return
   let campaignNode = guildCampaign?.campaignMap?.find(x=>x.id === 'RAIDS')?.campaignNodeDifficultyGroup[0]?.campaignNode
-  if(campaignNode) return
+  if(!campaignNode) return
   let images = [], autoComplete = [], i = guildRaidList.length, array = []
   while(i--) array.push(mapGuildRaid(guildRaidList[i], lang, mysteryBoxList, autoComplete, images, campaignNode))
   await Promise.all(array)

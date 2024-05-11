@@ -6,7 +6,7 @@ module.exports = (skillReference = [], skillMap = {}, abilityList = [], effectLi
   for(let i in skillReference){
     if(!skillMap[skillReference[i].skillId]) throw('skill for '+skillReference[i].skillId+' not found for getSkill')
     res[skillReference[i].skillId] = JSON.parse(JSON.stringify(skillMap[skillReference[i].skillId]))
-    let abilityDamage = getAbillityDamage(data.skillMap[skillReference[i].skillId].abilityId, abilityList, effectList)
+    let abilityDamage = getAbillityDamage(skillMap[skillReference[i].skillId].abilityId, abilityList, effectList)
     if(abilityDamage) res[skillReference[i].skillId].damage = abilityDamage
   }
   if(Object.values(res)?.length > 0) return res

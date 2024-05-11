@@ -15,7 +15,7 @@ const checkAssetName = (img)=>{
 }
 const checkImage = async(obj = {})=>{
   if(!obj.img) return
-  if(imagesToIgnore?.has(obj.img) return;
+  if(imagesToIgnore?.has(obj.img)) return;
   if(obj.img.startsWith('icon_stat_')) return
   let status = await saveImage(obj.assetVersion, obj.img, obj.dir)
   if(!status) return 1
@@ -33,11 +33,11 @@ const processMsg = async(msg = {})=>{
 const start = async()=>{
   try{
     if(!rabbitmq.ready){
-      setTimeout(startConsumer, 5000)
+      setTimeout(start, 5000)
       return
     }
     if(consumer) await consumer.close()
-    consumer = rabbitmq.createConsumer({ consumerTag: POD_NAME, concurrency: 1, qos: { prefetchCount: 1 }, queue: QUE_NAME, queueOptions: { durable: true, arguments: { 'x-queue-type': 'quorum' } } }, processMsg)
+    consumer = rabbitmq.createConsumer({ consumerTag: POD_NAME, concurrency: 1, qos: { prefetchCount: 1 }, queue: QUE_NAME, queueOptions: { durable: true, arguments: { 'x-queue-type': 'quorum', 'x-message-ttl': 600000 } } }, processMsg)
     consumer.on('error', (err)=>{
       log.info(err)
     })
@@ -46,7 +46,7 @@ const start = async()=>{
     })
   }catch(e){
     log.error(e)
-    setTimeout(startConsumer, 5000)
+    setTimeout(start, 5000)
   }
 }
 start()

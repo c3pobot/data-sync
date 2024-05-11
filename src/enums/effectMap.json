@@ -33,5 +33,6 @@
   "special_attack_buff": "BattleEffect_OffenseUp",
   "protection_over_time": "BattleEffect_RecoverProtectionOverTime_Characters",
   "special_breach_debuff": "BattleEffect_Breach",
-  "undispellable_taunt": "BattleEffect_Taunt"
+  "undispellable_taunt": "BattleEffect_Taunt",
+  "armorshred_effect": "ARMORSHRED_DEBUFF_V2"
 }

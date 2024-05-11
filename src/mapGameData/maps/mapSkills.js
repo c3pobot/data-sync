@@ -18,8 +18,7 @@ const updateSkills = (unit = {}, lang = {}, skillList = [], abilityList = [], ef
   for(let i in unit.ultimate) unit.ultimate[i] = updateUlitmate(unit.ultimate[i], lang, skillList, abilityList, effectList)
 }
 const mapEffectReference = (effectReference = [], abilityDamage = [], effectList = [])=>{
-  let i = effectReference.length
-  while(i--){
+  for(let i in effectReference){
     let effect = effectList.find(x=>x.id === effectReference[i].id)
     if(!effect) continue
     if(effect.multiplierAmountDecimal == 0 && !effect.summonId) continue
@@ -44,8 +43,7 @@ const updateSkill = (unitSkill, lang = {}, skillList = [], abilityList = [], eff
     abilityDamage: []
   }
   if(tempObj.tiers?.length > 0){
-    let i = tempObj.tiers.length
-    while(i--) mapTier(tempObj.tiers[i], tempObj.abilityDamage, effectList)
+    for(let i in tempObj.tiers) mapTier(tempObj.tiers[i], tempObj.abilityDamage, effectList)
   }
   return {...unitSkill,...tempObj}
 }
@@ -62,7 +60,7 @@ const updateUlitmate = async(unitSkill, lang = {}, skillList = [], abilityList =
   return {...unitSkill,...tempObj}
 }
 const mapUnitSkill = async(unit = {}, lang = {}, skillList = [], abilityList = [], effectList = [])=>{
-  updateSkills(unit, lang = {}, skillList = [], abilityList = [], effectList = [])
+  updateSkills(unit, lang, skillList, abilityList, effectList)
   if(unit.ultimate) unit.ultimate = Object.values(unit.ultimate)
   if(unit.skills) unit.skills = Object.values(unit.skills)
   if(unit.skills.length > 0) await mongo.set('skills', { _id: unit.baseId }, unit)
@@ -77,11 +75,15 @@ module.exports = async(gameVersion, localeVersion)=>{
   ])
 
   if(!unitList || !abilityList || !skillList || !effectList || !lang) return
-  let units = unitList.filter(x=>x.rarity == 7 && x.obtainable == true && x.obtainableTime == 0)?.map(x=> { return indexUnits(x, lang)})
+  let units = unitList.filter(x=>x.rarity == 7 && x.obtainable == true && x.obtainableTime == 0)?.map(x=> { return indexUnitSkills(x, lang)})
   if(!units) return
 
+  for(let i in units) await mapUnitSkill(units[i], lang, skillList, abilityList, effectList)
+  /*
   let i = units.length, array = []
+
   while(i--) array.push(mapUnitSkill(units[i], lang, skillList, abilityList, effectList))
   await Promise.all(array)
+  */
   return true
 }

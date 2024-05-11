@@ -28,9 +28,10 @@ const mapUnits = (units = [], faction = {}, lang = {})=>{
     res[units[i].baseId] = { baseId: units[i].baseId, nameKey: lang[units[i].nameKey], combatType: +units[i].combatType }
     let f = units[i].categoryId.length
     while(f--){
-      if(faction[units[i].categoryId[f]]?.units) faction[units[i].categoryId[f]].units.push(res[u.baseId])
+      if(faction[units[i].categoryId[f]]?.units) faction[units[i].categoryId[f]].units.push(res[units[i].baseId])
     }
   }
+  return res
 }
 const mapStatEnum = (enums = {}, lang = {})=>{
   let res = {}, tempLang = {}
@@ -48,7 +49,7 @@ const mapStatEnum = (enums = {}, lang = {})=>{
       if(tempLang[stat]) res[i] = {...res[i],...tempLang[stat]}
     }
   }
-  return res
+  return Object.values(res)
 }
 const getTierType = (tier)=>{
   if(tier == 2) return 'alignment'
@@ -60,7 +61,7 @@ const mapCategory = (category = {}, abilityId, targetRule, type, cron, dataList,
   cron.ability[abilityId].target[targetRule] = {
     id: targetRule,
     nameKey: dataList.ability[abilityId]?.nameKey?.replace(/\{0\}/g, dataList.factions[category.categoryId]?.nameKey),
-    descKey: dataList.ability[affixSet.affix[s].abilityId]?.descKey?.replace(/\{0\}/g, dataList.factions[category.categoryId]?.nameKey)
+    descKey: dataList.ability[abilityId]?.descKey?.replace(/\{0\}/g, dataList.factions[category.categoryId]?.nameKey)
   }
   if(type === 'unit') cron.ability[abilityId].target[targetRule].unit = dataList.factions[category.categoryId].units[0]
 }
@@ -78,10 +79,13 @@ const mapAffix = (affix = {}, type, cron, dataList, images)=>{
   if(!target?.category?.category || target?.category?.category?.length == 0) return
   mapCategories(target?.category?.category, affix.abilityId, affix.targetRule, type, cron, dataList, images)
 }
-const mapAffixTemplateSetId = (affixTemplateSetId, type, cron, dataList, images)=>{
+const mapAffixSet = (affixTemplateSetId, type, cron, dataList, images)=>{
+  if(!affixTemplateSetId) return
   let affixSet = dataList.affixList.find(x=>x.id == affixTemplateSetId)
-  if(!affixSet?.affix) return
   for(let i in affixSet.affix) mapAffix(affixSet.affix[i], type, cron, dataList, images)
+}
+const mapAffixTemplateSetId = (affixTemplateSetId, type, cron, dataList, images)=>{
+  for(let i in affixTemplateSetId) mapAffixSet(affixTemplateSetId[i], type, cron, dataList, images)
 }
 const mapTiers = (tiers, cron, dataList, images)=>{
   for(let i in tiers){
@@ -89,12 +93,12 @@ const mapTiers = (tiers, cron, dataList, images)=>{
     mapAffixTemplateSetId(tiers[i].affixTemplateSetId, type, cron, dataList, images)
   }
 }
-const mapCron = async(cron = {}, dataList = {}, images = [])=>{
+const mapCron = async(cron = {}, cronSet = {}, dataList = {}, images = [])=>{
   cron.stat = {}
   cron.ability = {}
   cron.setTier = cronSet.tier
   cron.setMaterial = cronSet.setMaterial
-  cron.nameKey = lang[cronSet.displayName]
+  cron.nameKey = dataList.lang[cronSet.displayName]
   cron.expirationTimeMs = +cronSet.expirationTimeMs
   cron.iconKey = cronSet.icon
   cron.detailPrefab = cronSet.detailPrefab
@@ -117,20 +121,20 @@ module.exports = async(gameVerion, localeVersion, assetVersion)=>{
 
   let stats, factions, units, ability
   if(factionList?.length > 0 && lang) factions = mapFaction(factionList, lang)
-  if(unitList?.length > 0 && lang && Object.values(faction)?.length > 0) units = mapUnits(unitList, factions, lang)
+  if(unitList?.length > 0 && lang && Object.values(factions)?.length > 0) units = mapUnits(unitList.filter(x=>x.rarity == 7 && x.obtainable == true && x.obtainableTime == 0), factions, lang)
   if(abilityList?.length > 0 && lang) ability = mapAbility(abilityList, lang)
   if(enums['UnitStat'] && lang) stats = mapStatEnum(enums['UnitStat'], lang)
 
-  if(!faction || !units || !stats || !ability) return
-  let crons = {}, images = []
-  if(Object.values(factions).length == 0 || Object.values(units).length == 0 || Object.values(stats).length == 0 || Object.values(units).length == 0) return
+  if(!factions || !units || !stats || !ability) return
+
+  if(Object.values(factions).length == 0 || Object.values(units).length == 0 || stats?.length == 0 || Object.values(units).length == 0) return
 
   let timeNow = Date.now(), i = datacronTemplateList.length, array = [], images = []
   let dataList = { lang: lang, factions: factions, stats: stats, ability: ability, targetSetList: targetSetList, affixList: datacronAffixTemplateSetList }
   while(i--){
     let cronSet = datacronSetList.find(x=>x.id == datacronTemplateList[i].setId)
     if(!cronSet?.expirationTimeMs || +cronSet.expirationTimeMs < +timeNow) continue
-    array.push(mapCron(datacronSetList[i], dataList, images))
+    array.push(mapCron(datacronTemplateList[i], cronSet, dataList, images))
   }
   await Promise.all(array)
   await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.datacron-set': 'datacron-set' })

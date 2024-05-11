@@ -1,7 +1,11 @@
 'use strict'
 const mongo = require('mongoclient')
 const getFile = require('src/helpers/getFile')
-
+const getDifficulty = (str)=>{
+  if(str?.includes('_II_DIFF')) return 9
+  if(str?.includes('_III_DIFF')) return 10
+  return 8
+}
 const mapChallenge = async(challenge = {}, lang = {})=>{
   let tempObj = {
     id: challenge.id,
@@ -9,20 +13,19 @@ const mapChallenge = async(challenge = {}, lang = {})=>{
     descKey: lang[challenge.descKey] || challenge.descKey,
     reward: +(challenge.reward?.find(x=>x.type == 22)?.minQuantity || 0),
     type: challenge.type,
-    difficulty: 8
+    difficulty: getDifficulty(challenge.id)
   }
-  if(challenge.id.includes('_III_DIFF')) tempObj.difficulty = 9
   await mongo.set('cqFeats', { _id: challenge.id }, tempObj)
 }
 module.exports = async(gameVerion, localeVersion)=>{
-  let [ lang, obj ] = Promise.all([
+  let [ lang, challengeList ] = await Promise.all([
     getFile('Loc_ENG_US.txt', localeVersion),
     getFile('challenge', gameVerion)
   ])
-  if(!lang || !obj) return
+  if(!lang || !challengeList) return
 
-  let i = obj.length, array = []
-  while(i--) array.push(mapChallenge(obj[i], lang))
+  let i = challengeList.length, array = []
+  while(i--) array.push(mapChallenge(challengeList[i], lang))
   await Promise.all(array)
   return true
 }

@@ -12,12 +12,12 @@ const mapCampainMap = async(campaignMap = [], dataList = {}, campaignId)=>{
 const mapCampainNodeDifficulty = async(campaignNodeDifficultyGroup = [], dataList, campaignId, campaignMapId)=>{
   let i = campaignNodeDifficultyGroup.length, array = []
   while(i--){
-    if(campaignNodeDifficultyGroup[i].id) array.push(mapCampainNode(campaignNodeDifficultyGroup[i].campaignNode, dataList, campaignId, campaignMapId, campaignNodeDifficultyGroup[i].campaignNodeDifficulty))
+    if(campaignNodeDifficultyGroup[i].campaignNodeDifficulty) array.push(mapCampainNode(campaignNodeDifficultyGroup[i].campaignNode, dataList, campaignId, campaignMapId, campaignNodeDifficultyGroup[i].campaignNodeDifficulty))
   }
   await Promise.all(array)
 }
 const mapCampainNode = async(campaignNode = [], dataList, campaignId, campaignMapId, campaignNodeDifficulty)=>{
-  let i = campaignNode, array = []
+  let i = campaignNode.length, array = []
   while(i--){
     if(campaignNode[i].id) array.push(mapCampainMissions(campaignNode[i].campaignNodeMission, dataList, campaignId, campaignMapId, campaignNodeDifficulty, campaignNode[i].id ))
   }
@@ -27,7 +27,7 @@ const mapCampainMissions = async(campaignMissions = [], dataList, campaignId, ca
   let i = campaignMissions.length, array = []
   while(i--){
     if(!campaignMissions[i].grindEnabled) continue
-    if(campaignMission[i].id) array.push(mapCampainMission(campaignMission[i], dataList, campaignId, campaignMapId, campaignNodeDifficulty, campaignNodeId))
+    if(campaignMissions[i].id) array.push(mapCampainMission(campaignMissions[i], dataList, campaignId, campaignMapId, campaignNodeDifficulty, campaignNodeId))
   }
   await Promise.all(array)
 }
@@ -42,7 +42,7 @@ const mapCampainMission = async(campaignMission = {}, dataList, campaignId, camp
       campaignMissionId: campaignMission.id,
     },
     mapNameKey: dataList.mapNameKey,
-    missionNameKey: dataList.lang[campaignMission.shortNameKey] || campaignMission.shortNameKey? lang[campaignMission.shortNameKey]:campaignMission.shortNameKey
+    missionNameKey: dataList.lang[campaignMission.shortNameKey] || campaignMission.shortNameKey
   }
   if(campaignMission.dailyBattleCapKey) tempObj.dailyBattleCapKey = +(dataList.actionCapList.find(x=>x.id === campaignMission.dailyBattleCapKey)?.maxActions || 0)
   tempObj.rewards = mapCampainRewards(campaignMission.rewardPreview, dataList) || []
@@ -52,12 +52,12 @@ const mapCampainMission = async(campaignMission = {}, dataList, campaignId, camp
 const mapCampainRewards = (rewards = [], { lang, gearList, materialList, mysteryModList, modSetList })=>{
   let res = []
   for(let i in rewards){
-    if(rewards[r].id && !rewards[r].id.includes('GRIND') && !rewards[r].id.includes('xp-mat') && !rewards[r].id.includes('FORCE_POINT') && !rewards[r].id.includes('ability_mat')){
+    if(rewards[i].id && !rewards[i].id.includes('GRIND') && !rewards[i].id.includes('xp-mat') && !rewards[i].id.includes('FORCE_POINT') && !rewards[i].id.includes('ability_mat')){
       let tempReward = {
-        id: rewards[r].id,
-        qty: rewards[r].maxQuantity
+        id: rewards[i].id,
+        qty: rewards[i].maxQuantity
       }
-      let gear = gearList.find(x=>x.id == rewards[r].id), material = materialList.find(x=>x.id == rewards[r].id), mysteryMod = mysteryModList.find(x=>x.id == rewards[r].id)
+      let gear = gearList.find(x=>x.id == rewards[i].id), material = materialList.find(x=>x.id == rewards[i].id), mysteryMod = mysteryModList.find(x=>x.id == rewards[i].id)
       if(gear?.id){
         tempReward.nameKey = lang[gear.nameKey] ? lang[gear.nameKey]:gear.nameKey;
         tempReward.icon = gear.iconKey
@@ -95,16 +95,17 @@ const mapCampainEnergy = (energy = [])=>{
   return res
 }
 module.exports = async(gameVersion, localeVersion)=>{
-  let [ campaign, lang, actionCap, gear, material, mysteryMod, modSet ] = await Promise.all([
-    ReadFile(`campaign`, gameVersion),
-    ReadFile(`Loc_ENG_US.txt`, localeVersion),
-    ReadFile(`dailyActionCap`, gameVersion),
-    ReadFile(`equipment`, gameVersion),
-    ReadFile(`material`, gameVersion),
-    ReadFile(`mysteryStatMod`, gameVersion),
-    ReadFile(`statModSet`, gameVersion),
+  let [ campaign, lang, actionCapList, gearList, materialList, mysteryModList, modSetList ] = await Promise.all([
+    getFile(`campaign`, gameVersion),
+    getFile(`Loc_ENG_US.txt`, localeVersion),
+    getFile(`dailyActionCap`, gameVersion),
+    getFile(`equipment`, gameVersion),
+    getFile(`material`, gameVersion),
+    getFile(`mysteryStatMod`, gameVersion),
+    getFile(`statModSet`, gameVersion)
   ])
-  if(!campaign || !lang || !actionCapList || !gearList || !materialList || mysteryModList || !modSetList) return
+  if(!campaign || !lang || !actionCapList || !gearList || !materialList || !mysteryModList || !modSetList) return
+
   let obj = campaign.filter(x=>x.grindEnabled)
   if(!obj || obj.length == 0) return
 
