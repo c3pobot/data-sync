@@ -8,7 +8,7 @@ module.exports = async(gameVersion, localeVersion)=>{
       autoComplete.push({ name: obj[i].nameKey, value: obj[i]._id })
     }
   }
-  if(autoComplete.length > 0){
+  if(autoComplete.length >= 0){
     await mongo.set('autoComplete', { _id: 'datacron-set' }, { data: autoComplete, include: true, gameVersion: gameVersion, localeVersion: localeVersion })
     return true
   }

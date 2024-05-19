@@ -126,7 +126,7 @@ const startSync = async()=>{
         dataVersions.updateInProgress = false
       }
     }
-    setTimeout(StartSync, UPDATE_INTERVAL * 1000)
+    setTimeout(startSync, UPDATE_INTERVAL * 1000)
     //setTimeout(startSync, 5 * 1000)
   }catch(e){
     log.error(e)
