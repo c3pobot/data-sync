@@ -102,6 +102,7 @@ const mapCron = async(cron = {}, cronSet = {}, dataList = {}, images = [])=>{
   cron.expirationTimeMs = +cronSet.expirationTimeMs
   cron.iconKey = cronSet.icon
   cron.detailPrefab = cronSet.detailPrefab
+  cron.TTL = new Date(+cronSet.expirationTimeMs)
   mapTiers(cron.tier, cron, dataList, images)
   await mongo.set('datacronList', { _id: cron.id }, cron)
 }

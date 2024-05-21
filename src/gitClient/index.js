@@ -17,6 +17,23 @@ const getSha = async(opt = {})=>{
   let file = await get(opt)
   return file?.sha
 }
+const pushFile = async({ repo, fileName, token, data, user, email, commitMsg, sha })=>{
+
+  if(!repo || !fileName || !token || !data || !email || !user) return
+  let rateLimit = await checkRateLimit(token)
+
+  if(!rateLimit) return
+  let body = { committer: { name: user, email: email }, message: commitMsg?.toString() || 'update', content: data, sha: sha }
+  let status = await fetch(`https://api.github.com/repos/${repo}/contents/${fileName}`, 'PUT', JSON.stringify(body), { 'Authorization': `Bearer ${token}` })
+  if(!status?.content?.sha){
+    if(status?.message?.includes('sha') && !sha){
+      let tempSha = await getSha({ repo: repo, fileName: fileName, token: token })
+      if(tempSha) return await pushFile({ repo: repo, fileName: fileName, token: token, data: data, user: user, email: email, commitMsg: commitMsg, sha: tempSha })
+    }
+    log.error(status)
+  }
+  return status?.content?.sha
+}
 const checkRateLimit = async(token)=>{
   let headers
   if(token) headers = { 'Authorization': `Bearer ${token}` }
@@ -39,17 +56,7 @@ module.exports.list = async({ repo, token, dir })=>{
   if(token) headers = { 'Authorization': `Bearer ${token}` }
   return await fetch(uri, 'GET', null, headers)
 }
-module.exports.push = async({ repo, fileName, token, data, user, email, commitMsg, sha })=>{
-
-  if(!repo || !fileName || !token || !data || !email || !user) return
-  let rateLimit = await checkRateLimit(token)
-
-  if(!rateLimit) return
-  let body = { committer: { name: user, email: email }, message: commitMsg?.toString() || 'update', content: data, sha: sha }
-  let status = await fetch(`https://api.github.com/repos/${repo}/contents/${fileName}`, 'PUT', JSON.stringify(body), { 'Authorization': `Bearer ${token}` })
-  if(!status?.content?.sha) log.error(status)
-  return status?.content?.sha
-}
+module.exports.push = pushFile
 module.exports.clone = async({ repo, dir, user, token, branch }) =>{
   if(!repo || !dir) return
   let uri = 'https://'

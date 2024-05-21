@@ -18,7 +18,7 @@ const mapSkillReference = (skillReference = [], unit = {}, lang = {}, skillList 
   if(!skillReference || skillReference?.length == 0) return
   for(let i in skillReference){
     unit.skills[skillReference[i].skillId] = skillList[skillReference[i].skillId]
-    if(skillList[skillReference[i].skillId]?.omiTier) updateOmi.push(addOmi(unit.baseId, lang[unit.nameKey], skillList[skillReference[i].skillId]))
+    if(skillList[skillReference[i].skillId]?.omiTier) updateOmi.push(addOmi(unit.baseId, unit.nameKey, skillList[skillReference[i].skillId]))
   }
 }
 const mapUnits = async(unit = {}, lang = {}, skillList = {}, abilityList = [], factionList = {}, effectList = [], images = [], unitsAutoComplete = [], updateOmi = [])=>{
