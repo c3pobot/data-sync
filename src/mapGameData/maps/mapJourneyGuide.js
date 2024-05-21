@@ -99,6 +99,7 @@ const mapCampaign = (campaign = [], units = {}, factions = {}, lang = {})=>{
   })
   return res
 }
+
 const mapTask = (task = {}, dataList = {}, tempEvent = {})=>{
   if(!task.actionLinkDef?.link?.startsWith('UNIT_DETAILS?')) return
   let tier = task.descKey.split('_')
@@ -109,6 +110,7 @@ const mapTask = (task = {}, dataList = {}, tempEvent = {})=>{
   tempEvent.requirement.unit[baseId].required = true
   if(task.descKey?.toUpperCase().includes('RELIC')) tempEvent.requirement.unit[baseId].relic = +tier[(tier.length - 1)]
   if(task.descKey?.toUpperCase().includes('STAR')) tempEvent.requirement.unit[baseId].rarity = +tier[(tier.length - 1)]
+  if(task.descKey?.toUpperCase().includes('GEAR')) tempEvent.requirement.unit[baseId].tier = +tier[(tier.length - 1)]
 }
 const mapRequirementItem = (requirementItem = {}, dataList = {}, tempEvent = {})=>{
   let requirement = dataList.challengeList.find(x=>x.id === requirementItem.id)
