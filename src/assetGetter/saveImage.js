@@ -13,9 +13,10 @@ const FetchImage = async(thumbnailName, version)=>{
   return await fetch(`${AE_URI}/Asset/single?forceReDownload=true&version=${version}&assetName=${assest}`)
 }
 
-module.exports = async(version, thumbnailName, dir)=>{
+module.exports = async(version, thumbnailName, dir, base64Img)=>{
   if(!version || !thumbnailName || !dir) return
-  let img = await FetchImage(thumbnailName, version)
+  let img = base64Img
+  if(!img) img = await FetchImage(thumbnailName, version)
   if(!img) return
   let status = await exchange.send(ROUTING_KEY, { fileName: `${thumbnailName}.png`, dir: dir, file: img, timestamp: Date.now() })
   if(status) status = await gitClient.push({ repo: GIT_REPO, fileName: `${dir}/${thumbnailName}.png`, token: GIT_TOKEN, data: img, user: GIT_USER, email: GIT_EMAIL, commitMsg: version})
