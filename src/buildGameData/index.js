@@ -101,9 +101,9 @@ const getMasteryMultiplierName = (primaryStatID, tags)=>{
 const getUnitData = async(gameVersion, localeVersion)=>{
   let [ tempProgress, tempSkill, tempUnits, recipeList ] = await Promise.all([
     getStatProgression(gameVersion),
-    getFile('skill', version),
-    getFile('units', version),
-    getFile('recipe', version)
+    getFile('skill', gameVersion),
+    getFile('units', gameVersion),
+    getFile('recipe', gameVersion)
   ])
   if(!tempProgress || !tempSkill || !tempUnits || !recipeList) return
 
