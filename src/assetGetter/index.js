@@ -18,7 +18,7 @@ const checkImage = async(obj = {})=>{
   if(imagesToIgnore?.has(obj.img)) return;
   if(obj.img.startsWith('icon_stat_')) return
   let status = await saveImage(obj.assetVersion, obj.img, obj.dir, obj.base64Img)
-  if(!status) return
+  if(!status) return 1
   log.debug(`saved ${obj.img} to ${obj.dir}...`)
 }
 const processMsg = async(msg = {})=>{
@@ -27,7 +27,7 @@ const processMsg = async(msg = {})=>{
     return await checkImage(msg.body)
   }catch(e){
     log.error(e)
-    return
+    return 1
   }
 }
 const start = async()=>{
