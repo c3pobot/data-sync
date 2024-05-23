@@ -11,7 +11,7 @@ const swgohClient = require('./swgohClient')
 const gitClient = require('./gitClient')
 const updateAutoComplete = require('./updateAutoComplete')
 //const consumer = require('./consumer')
-//const mapPlatoons = require('./mapPlatoons')
+const mapPlatoons = require('./mapPlatoons')
 const checkEvents = require('./events')
 const updateData = require('./updateData')
 const { dataVersions } = require('./helpers/dataVersions')
@@ -69,7 +69,7 @@ const checkAPIReady = async()=>{
       //StartConsumer()
       startSync()
       syncEvents()
-      //mapPlatoons()
+      mapPlatoons()
       return
     }
     setTimeout(checkAPIReady, 5000)

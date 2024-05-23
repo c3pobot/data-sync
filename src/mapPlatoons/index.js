@@ -63,6 +63,7 @@ const GetSquads = (squads = [], pDef = {}, rarity = 0, relicTier = 1)=>{
 }
 const GetSort = (type, conflict)=>{
   try{
+    if(conflict?.includes('-B')) return 4
     if(type === 'DS') return 1
     if(type === 'Mixed') return 2
     if(type === 'LS') return 3
@@ -84,10 +85,13 @@ const MapPlatoons = async(tbData = {})=>{
         if(zDef?.forceAlignment > alignment) alignment = zDef.forceAlignment
         let phase = await GetPhase(tbData.reconZoneStatus[i].zoneStatus?.zoneId)
         let conflict = await GetConflict(tbData.reconZoneStatus[i].zoneStatus?.zoneId)
+        if(tbData.reconZoneStatus[i].zoneStatus?.zoneId?.includes('_bonus_')) conflict += '-B'
         let id = phase+'-' +conflict
-        let type = await GetType(zDef?.combatType, alignment)
+
+        let type = await GetType(zDef?.territoryBattleZoneUnitType, alignment)
         let sort = await GetSort(type, conflict)
-        if(!platoons[id]) platoons[id] = { id: id, phase: phase, conflict: conflict, squads: [], type: type, sort: sort, totalPoints: 0, maxUnit: pDef?.zoneDefinition?.maxUnitCountPerPlayer }
+        if(!platoons[id]) platoons[id] = { id: id, phase: phase, conflict: conflict, linkedConflictId: pDef?.zoneDefinition?.linkedConflictId, squads: [], type: type, sort: sort, totalPoints: 0, maxUnit: pDef?.zoneDefinition?.maxUnitCountPerPlayer, bonus: tbData.reconZoneStatus[i].zoneStatus?.zoneId?.includes('_bonus_') }
+
         if(!platoons[id].nameKey) platoons[id].nameKey = locale[pDef?.zoneDefinition?.nameKey] || pDef?.zoneDefinition?.nameKey
         for(let p in tbData.reconZoneStatus[i].platoon){
           let squad = await GetSquads(tbData.reconZoneStatus[i].platoon[p]?.squad, pDef?.platoonDefinition.find(x=>x?.id === tbData.reconZoneStatus[i].platoon[p]?.id), pDef?.unitRarity, pDef?.unitRelicTier)

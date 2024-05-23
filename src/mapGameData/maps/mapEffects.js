@@ -44,13 +44,14 @@ const addTags = async(unit = {}, skill = {}, tags = [], effects)=>{
 
     //let effect = effects.find(x=>x.nameKey === tags[i].nameKey)
     if(!effects[tags[i].nameKey]) continue
-    if(!effects[tags[i].nameKey].tags[tags[i].tag]){
-      effects[tags[i].nameKey].tags[tags[i].tag] = tags[i].tag
-      await mongo.set('effects', { _id: effects[tags[i].nameKey].id }, { [`tags.${tags[i].tag}`]: tags[i].tag })
-    }
+    
     if(!effects[tags[i].nameKey].units[skill.id]){
+      if(!effects[tags[i].nameKey].savedToDb){
+        await mongo.set('effects', { _id: effects[tags[i].nameKey].id }, { id: effects[tags[i].nameKey].id, nameKey: effects[tags[i].nameKey].nameKey, descKey: effects[tags[i].nameKey].descKey, locKeys: effects[tags[i].nameKey].locKeys })
+        effects[tags[i].nameKey].savedToDb = true
+      }
       effects[tags[i].nameKey].units[skill.id] = tempUnit
-      await mongo.set('effects', { _id: effects[tags[i].nameKey].id }, { [`units.${skill.id}`]: tempUnit })
+      await mongo.set('effects', { _id: effects[tags[i].nameKey].id }, { [`units.${skill.id}`]: tempUnit, [`tags.${tags[i].tag}`]: tags[i].tag })
     }
     //if(effect.tags.filter(x=>x === tags[i].tag).length === 0) effect.tags.push(tags[i].tag)
     //if(effect.units.filter(x=>x.skillId === skill.id).length === 0 )  effect.units.push(tempUnit)
@@ -64,7 +65,7 @@ const checkUnit = async(unit, dataList, effects)=>{
       tempSkill.unitNameKey = unit.nameKey
       tempSkill.unitBaseId = unit.baseId
       //mongo.set('mechanics', { _id: unit.skills[i].id }, JSON.parse(JSON.stringify(tempSkill)))
-      if(tempSkill?.tags?.length > 0) await addTags(unit, unit.skills[i], tempSkill.tags)
+      if(tempSkill?.tags?.length > 0) await addTags(unit, unit.skills[i], tempSkill.tags, effects)
     }
   }
 }
