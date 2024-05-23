@@ -5,7 +5,6 @@ const getFile = require('src/helpers/getFile')
 const getSkillList = require('./getSkillList')
 const effectMap = require(`src/enums/effectMap`)
 
-let langArray, abilityList, effectList, lang, effects, units, missingEffects
 const mapUnitSkill = (skillReference = [], skill = {}, skillList = {})=>{
   let i = skillReference.length
   while(i--){
@@ -31,38 +30,47 @@ const cleanEffectName = (string)=>{
   string = string.replace(/\[\w{1,6}\]/g, '')
   return string.trim()
 }
-const addTags = (unit = {}, skill = {}, tags = [])=>{
+const addTags = async(unit = {}, skill = {}, tags = [], effects)=>{
   let tempUnit = { nameKey: unit.nameKey, baseId: unit.baseId, combatType: unit.combatType, skillId: skill.id, skill: JSON.parse(JSON.stringify(skill)) }
   for(let i in tags){
     if(!tags[i].nameKey || !skill.descKey.toLowerCase().includes(tags[i].nameKey.toLowerCase())) continue
-    if(effects.filter(x=>x.nameKey === tags[i].nameKey).length === 0 && tags[i].persistentLocKey){
+    if(!effects[tags[i].nameKey]){
       let tempEffect = JSON.parse(JSON.stringify(tags[i]))
       tempEffect.id = tempEffect.persistentLocKey
-      tempEffect.tags = []
-      tempEffect.units = []
-      effects.push(tempEffect)
+      tempEffect.tags = {}
+      tempEffect.units = {}
+      effects[tags[i].nameKey] = tempEffect
     }
-    let effect = effects.find(x=>x.nameKey === tags[i].nameKey)
-    if(!effect) continue
-    if(effect.tags.filter(x=>x === tags[i].tag).length === 0) effect.tags.push(tags[i].tag)
-    if(effect.units.filter(x=>x.skillId === skill.id).length === 0 )  effect.units.push(tempUnit)
+
+    //let effect = effects.find(x=>x.nameKey === tags[i].nameKey)
+    if(!effects[tags[i].nameKey]) continue
+    if(!effects[tags[i].nameKey].tags[tags[i].tag]){
+      effects[tags[i].nameKey].tags[tags[i].tag] = tags[i].tag
+      await mongo.set('effects', { _id: effects[tags[i].nameKey].id }, { [`tags.${tags[i].tag}`]: tags[i].tag })
+    }
+    if(!effects[tags[i].nameKey].units[skill.id]){
+      effects[tags[i].nameKey].units[skill.id] = tempUnit
+      await mongo.set('effects', { _id: effects[tags[i].nameKey].id }, { [`units.${skill.id}`]: tempUnit })
+    }
+    //if(effect.tags.filter(x=>x === tags[i].tag).length === 0) effect.tags.push(tags[i].tag)
+    //if(effect.units.filter(x=>x.skillId === skill.id).length === 0 )  effect.units.push(tempUnit)
   }
 }
-const checkUnit = async(unit, abilityList, effectList)=>{
+const checkUnit = async(unit, dataList, effects)=>{
   if(!unit.skills) return
   for(let i in unit.skills){
-    let tempSkill = checkSkill(unit.skills[i])
+    let tempSkill = checkSkill(unit.skills[i], dataList, effects)
     if(tempSkill){
       tempSkill.unitNameKey = unit.nameKey
       tempSkill.unitBaseId = unit.baseId
       //mongo.set('mechanics', { _id: unit.skills[i].id }, JSON.parse(JSON.stringify(tempSkill)))
-      if(tempSkill?.tags?.length > 0) addTags(unit, unit.skills[i], tempSkill.tags)
+      if(tempSkill?.tags?.length > 0) await addTags(unit, unit.skills[i], tempSkill.tags)
     }
   }
 }
-const checkSkill = (skill)=>{
+const checkSkill = (skill, dataList, effects)=>{
   if(!skill) return
-  let ability = abilityList.find(x=>x.id === skill.abilityId);
+  let ability = dataList.abilityList.find(x=>x.id === skill.abilityId);
   if(!ability) return
   let tempSkill = JSON.parse(JSON.stringify(skill))
   tempSkill.icon = ability.icon
@@ -70,12 +78,12 @@ const checkSkill = (skill)=>{
   tempSkill.cooldown = ability.cooldown
   tempSkill.tiers = []
   tempSkill.tags = []
-  let baseTier = checkEffects(ability.effectReference, 0)
+  let baseTier = checkEffects(ability.effectReference, 0, dataList)
   if(baseTier) tempSkill.tiers.push(baseTier)
   if(baseTier?.tags?.length > 0) mergeTags(tempSkill.tags, baseTier.tags)
   if(ability?.tier?.length == 0) return tempSkill
   for(let i in ability.tier){
-    let tempTier = checkEffects(ability.tier[i].effectReference, (+i + 1))
+    let tempTier = checkEffects(ability.tier[i].effectReference, (+i + 1), dataList)
     if(!tempTier) continue
     tempTier.cooldownMaxOverride = ability.tier[i].cooldownMaxOverride
     tempSkill.tiers.push(tempTier)
@@ -83,44 +91,44 @@ const checkSkill = (skill)=>{
   }
   return tempSkill
 }
-const checkEffects = (effectReference, tier)=>{
+const checkEffects = (effectReference, tier, dataList)=>{
   let res = { effects: [], tags: [], tier: tier }
   if(effectReference?.length == 0) return res
   for(let i in effectReference){
-    let tempObj = checkEffect(effectReference[i].id)
+    let tempObj = checkEffect(effectReference[i].id, dataList)
     if(!tempObj) continue
     res.effects.push(tempObj)
     if(tempObj.tags?.length > 0) res.tags = res.tags.concat(tempObj.tags)
   }
   return res
 }
-const checkEffect = (id)=>{
+const checkEffect = (id, dataList)=>{
   let res
-  let effect = effectList.find(x=>x.id === id)
+  let effect = dataList.effectList.find(x=>x.id === id)
   if(!effect) return
   res = JSON.parse(JSON.stringify(effect))
   res.effectReference = []
-  res.tags = checkTags(effect)
+  res.tags = checkTags(effect, dataList)
   if(!res.tags) res.tags = []
   if(effect.effectReference?.length == 0) return res
   for(let i in effect.effectReference){
-    let tempEffect = checkEffect(effect.effectReference[i].id)
+    let tempEffect = checkEffect(effect.effectReference[i].id, dataList)
     if(!tempEffect) continue
     res.effectReference.push(tempEffect)
     if(tempEffect.tags.length > 0) res.tags = res.tags.concat(tempEffect.tags)
   }
   return res
 }
-const checkTags = (effect)=>{
+const checkTags = (effect, dataList)=>{
   let tags = []
   if(effect.descriptiveTag?.filter(x=>x.tag.startsWith('countable_') || x.tag.startsWith('armorshred_')).length == 0) return tags
   for(let i in effect.descriptiveTag){
-    let tempTag = checkTag(effect.descriptiveTag[i].tag, effect)
+    let tempTag = checkTag(effect.descriptiveTag[i].tag, effect, dataList)
     if(tempTag) tags.push(tempTag)
   }
   return tags
 }
-const checkTag = (tag, effect)=>{
+const checkTag = (tag, effect, dataList)=>{
   if(!tag || tag.includes('ability') || tag.includes('countable') || tag.includes('clearable') || tag.includes('featcounter') || tag.startsWith('ai_') || tag == 'buff' || tag == 'debuff') return
   let tempTag = { tag: tag }
   if(effect.persistentIcon) tempTag.persistentIcon = effect.persistentIcon
@@ -128,13 +136,13 @@ const checkTag = (tag, effect)=>{
     tempTag.persistentLocKey = effect.persistentLocKey
   }else{
     let tempLocKeyName = 'BattleEffect_'+tag.replace('_buff','up').replace('_debuff','down').replace('special_')
-    let tempLocKey = langArray.find(x=>x.toLowerCase() === tempLocKeyName.toLowerCase())
+    let tempLocKey = dataList.langArray.find(x=>x.toLowerCase() === tempLocKeyName.toLowerCase())
     if(tempLocKey) tempTag.persistentLocKey = tempLocKey
   }
 
   if(!tempTag.persistentLocKey && effectMap[tag]) tempTag.persistentLocKey = effectMap[tag]
 
-  let effectName = cleanEffectName(lang[tempTag.persistentLocKey]), tempName
+  let effectName = cleanEffectName(dataList.lang[tempTag.persistentLocKey]), tempName
   if(effectName) tempName = effectName.split(":")
   if(tempName){
     if(tempName[0]) tempTag.nameKey = tempName[0].trim()
@@ -147,11 +155,14 @@ const mergeTags = (array = [], tags = [])=>{
     if(array.filter(x=>x.nameKey === tags[i].nameKey && x.tag === tags[i].tag).length === 0) array.push(tags[i])
   }
 }
-
+const sleep = (ms = 5000)=>{
+  return new Promise(resolve=>{
+    setTimeout(resolve, ms)
+  })
+}
 module.exports = async(gameVersion, localeVersion)=>{
-  langArray = null, abilityList = null, effectList = null, lang = null, effects = null, units = null
 
-  let [ tempLang, tempEffectList, tempAbilityList, unitList, skillList ] = await Promise.all([
+  let [ lang, effectList, abilityList, unitList, skillList ] = await Promise.all([
     getFile('Loc_ENG_US.txt', localeVersion),
     getFile('effect', gameVersion),
     getFile('ability', gameVersion),
@@ -159,15 +170,15 @@ module.exports = async(gameVersion, localeVersion)=>{
     getSkillList(gameVersion, localeVersion)
   ])
 
-  if(!tempLang || !tempEffectList || !tempAbilityList || !unitList || !skillList) return
+  if(!lang || !effectList || !abilityList || !unitList || !skillList) return
 
-  units = mapUnits(unitList.filter(x=>x.rarity == 7 && x.obtainable == true && x.obtainableTime == 0), skillList, tempLang)
+  let units = mapUnits(unitList.filter(x=>x.rarity == 7 && x.obtainable == true && x.obtainableTime == 0), skillList, lang)
   if(!units || units?.length == 0){
     units = null
     return
   }
 
-  langArray = Object.keys(tempLang), abilityList = tempAbilityList, effectList = tempEffectList, lang = tempLang, effects = []
+  let langArray = Object.keys(lang), effects = {}
   if(!langArray) return
   let manualEffects = new Set(Object.values(effectMap))
   for(let i in lang){
@@ -180,20 +191,18 @@ module.exports = async(gameVersion, localeVersion)=>{
     }
 
     if(!nameKey) continue
-    if(effects.filter(x=>x.nameKey === nameKey).length === 0){
-      let tempObj = { id: i.trim(), nameKey: nameKey, descKey: descKey, locKeys: [], tags: [], units: [] }
-      tempObj.locKeys.push(i.trim())
-      effects.push(tempObj)
-    }else{
-      effects.filter(x=>x.nameKey === nameKey)[0]?.locKeys?.push(i.trim())
-    }
+    if(!effects[nameKey]) effects[nameKey] = { id: i.trim(), nameKey: nameKey, descKey: descKey, locKeys: {}, tags: {}, units: {} }
+    effects[nameKey].locKeys[i.trim()] = i.trim()
   }
-  let array = []
-  for(let i in units) array.push(checkUnit(units[i], abilityList, effectList))
-  await Promise.all(array)
-  effects = effects?.filter(x=>x.units && x.units?.length > 0 && x.nameKey && x.id)
-  log.info(`finished mapping ${effects?.length} effects. adding to database...`)
-  if(effects.length == 0) return
+  let array = [], dataList = { langArray: langArray, lang: lang, effectList: effectList, abilityList: abilityList, skillList: skillList }
+  for(let i in units) await checkUnit(units[i], dataList, effects)
+  /*
+  //for(let i in units) array.push(checkUnit(units[i], dataList, effects))
+  //await Promise.all(array)
+  //effects = effects?.filter(x=>x.units && x.units?.length > 0 && x.nameKey && x.id)
+  //log.info(`finished mapping ${effects?.length} effects. adding to database...`)
+  //if(effects.length == 0) return
+
   let effectAutoComplete = [], count = 0
   for(let i in effects){
     if(effects[i].nameKey && effects[i].units?.length > 0 && effects[i].id){
@@ -201,6 +210,7 @@ module.exports = async(gameVersion, localeVersion)=>{
       await mongo.set('effects', { _id: effects[i].id }, effects[i])
       if(effectAutoComplete.filter(x=>x.name === effects[i].nameKey).length === 0) effectAutoComplete.push({name: effects[i].nameKey, value: effects[i].id})
       count++
+      await sleep()
     }
   }
   log.info(`added ${count} effects to the database...`)
@@ -208,5 +218,6 @@ module.exports = async(gameVersion, localeVersion)=>{
     //await mongo.set('autoComplete', { _id: 'effect' }, { include: true, data: effectAutoComplete })
     //await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.effect': 'effect' })
   }
+  */
   return true
 }
