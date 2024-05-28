@@ -32,7 +32,6 @@ module.exports = async(gameVersion, localeVersion)=>{
   if(!keyMapping || !lang || !enums) return
 
   let statMap = getStatMap(enums['UnitStat'], lang, keyMapping)
-  console.log(statMap)
   if(statMap){
     await mongo.set('configMaps', {_id: 'statDefMap'}, {gameVersion: gameVersion, localeVersion: localeVersion, data: statMap})
     return true
