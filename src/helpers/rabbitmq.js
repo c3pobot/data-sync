@@ -10,12 +10,12 @@ const connectOptions = {
   password: process.env.MESSAGE_BUS_PASS,
 }
 const client = new rabbitmq.Connection(connectOptions)
-/*
+
 client.on('error', (err)=>{
   log.error(`${POD_NAME} rabbitmq error...`)
   log.error(err)
 })
-*/
+
 client.on('connection', ()=>{
   log.info(`${POD_NAME} rabbitmq client connection successfully (re)established`)
 })

@@ -38,16 +38,16 @@ const mapAbilities = (array = [], unit = {}, summonEffects =[], abilityList = []
     summonEffects.push({ id: ability.id, baseId: unit.baseId, skillId: skill?.id, tiers: summonTag })
   }
 }
-const mapUnit = async(unit = {}, abilityList = [], effectList = [], skillList = [])=>{
+const mapUnit = (unit = {}, abilityList = [], effectList = [], skillList = [])=>{
   if(ignoreSet.has(unit.baseId)) return
   if(!unit.uniqueAbilityRef) return
   let summonEffects = []
   mapAbilities(unit.uniqueAbilityRef, unit, summonEffects, abilityList, skillList, effectList)
   mapAbilities(unit.limitBreakRef, unit, summonEffects, abilityList, skillList, effectList)
   mapAbilities(unit.leaderAbilityRef, unit, summonEffects, abilityList, skillList, effectList)
-  if(summonEffects?.length > 0) await mongo.set('summonerList', { _id: unit.baseId }, { baseId: unit.baseId, skills: summonEffects.filter(x=>x.tiers?.filter(y=>y.summonId).length) })
-  return
-//return summonEffects.filter(x=>x.tiers?.filter(y=>y.summonId).length)
+  //if(summonEffects?.length > 0) await mongo.set('summonerList', { _id: unit.baseId }, { baseId: unit.baseId, skills: summonEffects.filter(x=>x.tiers?.filter(y=>y.summonId).length) })
+  
+ return summonEffects.filter(x=>x.tiers?.filter(y=>y.summonId).length)
 }
 module.exports = async(gameVersion, localeVersion, assetVersion)=>{
   let [ skillList, abilityList, effectList, unitList ] = await Promise.all([
@@ -60,7 +60,10 @@ module.exports = async(gameVersion, localeVersion, assetVersion)=>{
   if(!skillList || !abilityList || !effectList || !unitList) return
 
   let array = []
-  for(let i in unitList) array.push(mapUnit(unitList[i], abilityList, effectList, skillList))
+  for(let i in unitList){
+  	let tempObj = mapUnit(unitList[i], abilityList, effectList, skillList)
+     if(tempObj?.length > 0) await mongo.set('summonerList', { _id: unitList[i].baseId}, { baseId: unitList[i].baseId, skills: tempObj })
+   }
   await Promise.all(array)
   return true
 }
