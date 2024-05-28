@@ -1,7 +1,7 @@
 'use strict'
 const log = require('logger')
 const fetch = require('./fetch')
-const GAME_CLIENT_URL = process.env.GAME_CLIENT_URL || 'http://localhost:3000'
+const GAME_CLIENT_URL = process.env.OAUTH_GAME_CLIENT_URL || process.env.GAME_CLIENT_URL
 let retryCount = +process.env.CLIENT_RETRY_COUNT || 6
 const GETRoutes = {'enums': 'enums'}
 
