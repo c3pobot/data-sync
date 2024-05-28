@@ -46,7 +46,8 @@ const mapUnit = async(unit = {}, abilityList = [], effectList = [], skillList = 
   mapAbilities(unit.limitBreakRef, unit, summonEffects, abilityList, skillList, effectList)
   mapAbilities(unit.leaderAbilityRef, unit, summonEffects, abilityList, skillList, effectList)
   if(summonEffects?.length > 0) await mongo.set('summonerList', { _id: unit.baseId }, { baseId: unit.baseId, skills: summonEffects.filter(x=>x.tiers?.filter(y=>y.summonId).length) })
-  //return summonEffects.filter(x=>x.tiers?.filter(y=>y.summonId).length)
+  return
+//return summonEffects.filter(x=>x.tiers?.filter(y=>y.summonId).length)
 }
 module.exports = async(gameVersion, localeVersion, assetVersion)=>{
   let [ skillList, abilityList, effectList, unitList ] = await Promise.all([
