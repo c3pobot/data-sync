@@ -17,5 +17,7 @@ Cmds.equipment = require('./mapEquipment')
 Cmds.modsDef = require('./mapModDef')
 Cmds.scavengerGear = require('./mapScavengerDef')
 //Cmds.summonerData = require('./updateSummonerData')
+Cmds.summonerList = require('./mapSummonerList')
+Cmds.summonerData = require('./mapSummonerData')
 Cmds.effects = require('./mapEffects')
 module.exports = Cmds
