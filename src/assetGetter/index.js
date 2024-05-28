@@ -38,9 +38,11 @@ const start = async()=>{
     }
     if(consumer) await consumer.close()
     consumer = rabbitmq.createConsumer({ consumerTag: POD_NAME, concurrency: 1, qos: { prefetchCount: 1 }, queue: QUE_NAME, queueOptions: { durable: true, arguments: { 'x-queue-type': 'quorum', 'x-message-ttl': 600000 } } }, processMsg)
+    /*
     consumer.on('error', (err)=>{
       log.info(err)
     })
+    */
     consumer.on('ready', ()=>{
       log.info(`${POD_NAME} asset consumer created...`)
     })
