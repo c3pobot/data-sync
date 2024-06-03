@@ -25,6 +25,7 @@
   },
   "homepage": "https://gitlab.com/c3po-shard/datasync#readme",
   "dependencies": {
+    "json-array-sorter": "^0.0.5",
     "logger": "github:c3pobot/logger",
     "mongoclient": "github:c3pobot/mongoclient",
     "node-fetch": "^2.6.7",

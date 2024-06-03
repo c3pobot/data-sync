@@ -13,7 +13,7 @@ const client = new rabbitmq.Connection(connectOptions)
 
 client.on('error', (err)=>{
   log.error(`${POD_NAME} rabbitmq error...`)
-  log.error(err)
+  //log.error(err)
 })
 
 client.on('connection', ()=>{

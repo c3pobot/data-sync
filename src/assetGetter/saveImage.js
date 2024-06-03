@@ -1,4 +1,5 @@
 'use strict'
+const mongo = require('mongoclient')
 const fetch = require('./fetch')
 const gitClient = require('src/gitClient')
 const exchange = require('src/helpers/exchange')
@@ -18,7 +19,8 @@ module.exports = async(version, thumbnailName, dir, base64Img)=>{
   let img = base64Img
   if(!img) img = await FetchImage(thumbnailName, version)
   if(!img) return
-  let status = await exchange.send(ROUTING_KEY, { fileName: `${thumbnailName}.png`, dir: dir, file: img, timestamp: Date.now() })
+  await mongo.set('imgCache', { _id: `${dir}-${thumbnailName}` }, { base64Img: img, dir: dir, fileName: `${thumbnailName}.png` })
+  let status = await exchange.send(ROUTING_KEY, { fileName: `${thumbnailName}.png`, dir: dir, key: `${dir}-${thumbnailName}`, base64Img: img, timestamp: Date.now() })
   if(status) status = await gitClient.push({ repo: GIT_REPO, fileName: `${dir}/${thumbnailName}.png`, token: GIT_TOKEN, data: img, user: GIT_USER, email: GIT_EMAIL, commitMsg: version})
   return status
 }
