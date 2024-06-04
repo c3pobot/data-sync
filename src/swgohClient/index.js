@@ -33,7 +33,6 @@ module.exports = async(uri, payload, identity = null)=>{
     }
     let obj = await requestWithRetry(`${GAME_CLIENT_URL}/${uri}`, opts)
     if(obj?.body) return obj.body
-    return await parseResponse(obj)
   }catch(e){
     log.error(uri)
     throw(e)
