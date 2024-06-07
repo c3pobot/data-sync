@@ -3,6 +3,7 @@ const mongo = require('mongoclient')
 const getFile = require('src/helpers/getFile')
 const checkImages = require('src/helpers/checkImages')
 const raidTokens = require(`src/enums/raidTokens`)
+const mapRaidRequirements = require('./mapRaidRequirements')
 
 const getRewards = (rankRewardPreview, lang = {}, mysteryBoxList = [], images = [])=>{
   if(!rankRewardPreview) return
@@ -48,7 +49,7 @@ const mapCampaignMission = (campaignMission = {}, missions = [], lang = {}, myst
  if(campaignMission?.rankRewardPreview?.length > 0) mapRewards(campaignMission.rankRewardPreview, mission.rewards, lang, mysteryBoxList, images)
  missions.push(mission)
 }
-const mapGuildRaid = async(raid = {}, lang = {}, mysteryBoxList = [], autoComplete = [], images = [], campaignNode)=>{
+const mapGuildRaid = async(raid = {}, lang = {}, mysteryBoxList = [], autoComplete = [], images = [], campaignNode, raidRequirements = [])=>{
   let campaign = campaignNode?.find(x=>x.id === raid?.campaignElementIdentifier?.campaignNodeId)
   if(!campaign) return
   let campaignMission = campaign.campaignNodeMission
@@ -62,24 +63,29 @@ const mapGuildRaid = async(raid = {}, lang = {}, mysteryBoxList = [], autoComple
   while(i--) mapCampaignMission(campaignMission[i], raid.mission, lang, mysteryBoxList, images)
   await mongo.set('raidDef', { _id: raid.id }, raid)
   if(raid?.nameKey && raid?.id) autoComplete.push({name: raid.nameKey, value: raid.id})
+  if(raid?.mission?.filter(x=>x.requirements?.faction?.length > 0)?.length > 0) raidRequirements.push(raid)
 }
 module.exports = async(gameVersion, localeVersion, assetVersion)=>{
-  let [ guildRaidList, campainList, mysteryBoxList, lang ] = await Promise.all([
+  let [ guildRaidList, campainList, mysteryBoxList, lang, unitList ] = await Promise.all([
     getFile('guildRaid', gameVersion),
     getFile('campaign', gameVersion),
     getFile('mysteryBox', gameVersion),
-    getFile('Loc_ENG_US.txt', localeVersion)
+    getFile('Loc_ENG_US.txt', localeVersion),
+    getFile('units', gameVersion)
   ])
-  if(!guildRaidList || !campainList || !mysteryBoxList || !lang) return
+  unitList = unitList?.filter(x=>x.rarity == 7 && x.obtainable == true && x.obtainableTime == 0)
+  if(!guildRaidList || !campainList || !mysteryBoxList || !lang || !unitList) return
 
   let guildCampaign = campainList?.find(x=>x.id === 'GUILD')
 
   if(!guildCampaign) return
   let campaignNode = guildCampaign?.campaignMap?.find(x=>x.id === 'RAIDS')?.campaignNodeDifficultyGroup[0]?.campaignNode
   if(!campaignNode) return
-  let images = [], autoComplete = [], i = guildRaidList.length, array = []
-  while(i--) array.push(mapGuildRaid(guildRaidList[i], lang, mysteryBoxList, autoComplete, images, campaignNode))
+  let images = [], autoComplete = [], i = guildRaidList.length, array = [], raidRequirements = []
+  while(i--) array.push(mapGuildRaid(guildRaidList[i], lang, mysteryBoxList, autoComplete, images, campaignNode, raidRequirements))
   await Promise.all(array)
+  if(raidRequirements?.length > 0) await mapRaidRequirements(raidRequirements, unitList, lang)
+
   if(images.length > 0 && assetVersion) checkImages(images, assetVersion, 'asset', 'raidList')
   if(autoComplete?.length > 0) await mongo.set('autoComplete', {_id: 'raid'}, {data: autoComplete, include: true})
   await mongo.set('autoComplete', {_id: 'nameKeys'}, { include: false, 'data.raid': 'raid' })

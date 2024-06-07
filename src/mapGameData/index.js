@@ -37,6 +37,7 @@ module.exports = async({ assetVersion, latestGamedataVersion, latestLocalization
       log.info(`updating collection ${missing[i]}...`)
       status = await maps[missing[i]](latestGamedataVersion, latestLocalizationBundleVersion, assetVersion)
       if(!status) break;
+      //if(missing[i] === 'raidDef') continue
       if(status) await mongo.set('versions', { _id: missing[i] }, { assetVersion: assetVersion, gameVersion: latestGamedataVersion, localeVersion: latestLocalizationBundleVersion })
     }
     if(status){
