@@ -7,7 +7,7 @@ module.exports = async(gameVersion, localeVersion)=>{
   let list = {}
   for(let i in obj){
     if(!obj[i].id) continue
-    list[obj[i].id] = { id: obj[i].id, nameKey: obj[i].nameKey, descKey: obj[i].descKey, tier: obj[i].tier.map(m=>{ return { descKey: m.descKey, upgradeDescKey: m.upgradeDescKey } }) }
+    list[obj[i].id] = { id: obj[i].id, nameKey: obj[i].nameKey, descKey: obj[i].descKey, tier: obj[i].tier.map(m=>{ return { descKey: m.descKey, upgradeDescKey: m.upgradeDescKey, cooldownMaxOverride: m.cooldownMaxOverride  } }) }
   }
   return list
 }
