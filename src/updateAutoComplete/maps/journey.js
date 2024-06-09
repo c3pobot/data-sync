@@ -2,7 +2,7 @@
 const mongo = require('mongoclient')
 module.exports = async(gameVersion, localeVersion)=>{
   let obj = await mongo.find('journeyGuide', {}, { baseId: 1, nameKey: 1, unitNameKey: 1})
-  let manualGuides = (mongo.find('botSettings', { _id: 'manualGuides' }))[0]
+  let manualGuides = (await mongo.find('botSettings', { _id: 'manualGuides' }))[0]
   let autoComplete = [], tempSet = new Set()
   for(let i in obj){
     if(tempSet.has(obj[i].baseId)) continue
