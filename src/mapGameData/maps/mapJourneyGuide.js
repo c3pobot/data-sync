@@ -117,7 +117,7 @@ const mapRequirementItem = (requirementItem = {}, dataList = {}, tempEvent = {})
   if(!requirement?.task || requirement?.task?.length == 0) return
   for(let i in requirement.task) mapTask(requirement.task[i], dataList, tempEvent)
 }
-const mapGuide = async(guideDef = {}, dataList = {}, autoComplete = [])=>{
+const mapGuide = async(guideDef = {}, dataList = {}, autoComplete = [], rewardUnit = {})=>{
   let requirements = dataList.requirementList.find(x=>x.id === guideDef.additionalActivationRequirementId)
   let tempUnit = dataList.units[guideDef.unitBaseId]
   let tempEvent = {
@@ -145,6 +145,7 @@ const mapGuide = async(guideDef = {}, dataList = {}, autoComplete = [])=>{
     await mongo.set('journeyGuide', { _id: tempEvent.baseId }, tempEvent)
     await mapGuideTemplates(tempEvent)
   }
+  if(!rewardUnit[guideDef.unitBaseId]) rewardUnit[guideDef.unitBaseId] = guideDef.unitBaseId
 }
 module.exports = async(gameVersion, localeVersion)=>{
   let [ unitList, lang, factionList, guideDefList, requirementList, challengeList, campaignList ] = await Promise.all([
@@ -165,12 +166,15 @@ module.exports = async(gameVersion, localeVersion)=>{
   if(units) campaign = mapCampaign(campaignList, faction, units, lang)
   if(!faction || !campaign || !units ) return
 
-  let i = guideDefList.length, array = [], autoComplete = [], dataList = { units: units, faction: faction, campaign: campaign, lang: lang, requirementList: requirementList, challengeList: challengeList }
-  while(i--) array.push(mapGuide(guideDefList[i], dataList, autoComplete))
+  let i = guideDefList.length, rewardUnit = {}, array = [], autoComplete = [], dataList = { units: units, faction: faction, campaign: campaign, lang: lang, requirementList: requirementList, challengeList: challengeList }
+  while(i--) array.push(mapGuide(guideDefList[i], dataList, autoComplete, rewardUnit))
   await Promise.all(array)
+  /*
   let manualGuides = (await mongo.find('botSettings', { _id: 'manualGuides'}))[0]
   if(manualGuides?.data?.length > 0) autoComplete = autoComplete.concat(manualGuides.data)
   if(autoComplete?.length > 0) await mongo.set('autoComplete', {_id: 'journey'}, { data: autoComplete, include: true })
   await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.journey': 'journey' })
+  */
+  await mongo.set('factions', { _id: 'journey_guide_units_manual' }, { baseId: 'journey_guide_units_manual', nameKey: 'Journey Guide Units', uiFilter: true, units: Object.values(rewardUnit) || [] })
   return true
 }
