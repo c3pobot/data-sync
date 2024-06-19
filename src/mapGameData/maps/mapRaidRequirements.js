@@ -3,17 +3,17 @@ const mongo = require('mongoclient')
 const mapFactionUnits = (unitList = [], reqFactions = []) =>{
   let res = {}
   for(let i in reqFactions){
-    let units = unitList?.filter(x=>x.categoryId.includes(reqFactions[i]))?.map(x=>x.baseId)
+    let units = unitList?.filter(x=>x.categoryId.includes(reqFactions[i].baseId))?.map(x=>x.baseId)
     if(!units || units?.length === 0) continue
-    if(!res[reqFactions[i]]) res[reqFactions[i]] = { baseId: reqFactions[i], hidden: true, uiFilter: false, units: [] }
-    res[reqFactions[i]].units = res[reqFactions[i]].units.concat(units)
+    if(!res[reqFactions[i].baseId]) res[reqFactions[i].baseId] = { baseId: reqFactions[i].baseId, nameKey: reqFactions[i].nameKey, hidden: false, uiFilter: false, units: [] }
+    res[reqFactions[i].baseId].units = res[reqFactions[i].baseId].units.concat(units)
   }
   return Object.values(res)
 }
 const mapRaidFactions = (requirements = {}, raidDef = {}, reqFactions = {})=>{
   if(!requirements?.faction || requirements?.faction.length === 0) return
   for(let i in requirements?.faction){
-    if(!reqFactions[requirements.faction[i]]) reqFactions[requirements.faction[i]] = requirements.faction[i]
+    if(!reqFactions[requirements.faction[i]]) reqFactions[requirements.faction[i]] = { baseId: requirements.faction[i], nameKey: raidDef.nameKey }
     if(!raidDef?.faction[requirements.faction[i]]) raidDef.faction[requirements.faction[i]] = {}
     raidDef.faction[requirements.faction[i]].baseId = requirements.baseId
     raidDef.faction[requirements.faction[i]].rarity = requirements.rarity
