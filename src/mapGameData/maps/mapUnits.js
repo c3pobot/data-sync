@@ -53,6 +53,11 @@ const mapFactions = async(faction, factionAutoComplete = [])=>{
   await mongo.set('factions', {_id: faction.baseId }, faction)
   factionAutoComplete.push({ name: faction.nameKey, value: faction.baseId })
 }
+const mapHiddenFactions = async(faction = {}, hiddenAutoComplete = [])=>{
+  if(!faction?.units || faction?.units?.length === 0) return
+  await mongo.set('hiddenFactions', { _id: faction.baseId }, faction)
+  hiddenAutoComplete.push({ name: faction.baseId, value: faction.baseId })
+}
 module.exports = async(gameVersion, localeVersion, assetVersion)=>{
   let [ skillList, factionList, unitList, abilityList, effectList, lang ] = await Promise.all([
     getSkillList(gameVersion, localeVersion, assetVersion),
@@ -70,15 +75,22 @@ module.exports = async(gameVersion, localeVersion, assetVersion)=>{
   await Promise.all(array)
   await Promise.all(updateOmi)
 
-  let factionArray = [], factionAutoComplete = []
+  let factionArray = [], factionAutoComplete = [], hiddenFaction = [], hiddenAutoComplete = []
   for(let i in factionList){
-    if(factionList[i].baseId.startsWith('special') || !factionList[i].nameKey || factionList[i].nameKey == 'Placeholder' || !factionList[i].uiFilter) continue
-    factionArray.push(mapFactions(factionList[i], factionAutoComplete))
+    if(factionList[i].baseId.startsWith('selftag_') || factionList[i].baseId === 'any_obtainable') continue
+    if(factionList[i].baseId.startsWith('special') || !factionList[i].nameKey || factionList[i].nameKey == 'Placeholder' || !factionList[i].uiFilter){
+      hiddenFaction.push(mapHiddenFactions(factionList[i], hiddenAutoComplete))
+    }else{
+      factionArray.push(mapFactions(factionList[i], factionAutoComplete))
+    }
+
   }
   await Promise.all(factionArray)
+  await Promise.all(hiddenFaction)
 
   if(unitsAutoComplete?.length > 0) await mongo.set('autoComplete', { _id: 'unit' }, { include: true, data: unitsAutoComplete })
-  if(factionArray?.length > 0) await mongo.set('autoComplete', { _id: 'faction' }, { include: true, data: factionAutoComplete })
+  if(hiddenAutoComplete?.length > 0) await mongo.set('autoComplete', { _id: 'hidden-faction' }, { include: true, data: hiddenAutoComplete })
+  //if(factionArray?.length > 0) await mongo.set('autoComplete', { _id: 'faction' }, { include: true, data: factionAutoComplete })
 
   await mongo.set('autoComplete', {_id: 'nameKeys'}, { include: false, 'data.unit': 'unit', 'data.leader': 'unit', 'data.unit1': 'unit', 'data.unit2': 'unit', 'data.unit3': 'unit', 'data.unit4': 'unit', 'data.faction': 'faction' })
 

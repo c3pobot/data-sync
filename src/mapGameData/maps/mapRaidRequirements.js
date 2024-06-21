@@ -5,7 +5,7 @@ const mapFactionUnits = (unitList = [], reqFactions = []) =>{
   for(let i in reqFactions){
     let units = unitList?.filter(x=>x.categoryId.includes(reqFactions[i].baseId))?.map(x=>x.baseId)
     if(!units || units?.length === 0) continue
-    if(!res[reqFactions[i].baseId]) res[reqFactions[i].baseId] = { baseId: reqFactions[i].baseId, nameKey: reqFactions[i].nameKey, hidden: false, uiFilter: false, units: [] }
+    if(!res[reqFactions[i].baseId]) res[reqFactions[i].baseId] = { baseId: reqFactions[i].baseId, nameKey: reqFactions[i].nameKey, hidden: false, uiFilter: false, units: [], raidId: reqFactions[i].raidId }
     res[reqFactions[i].baseId].units = res[reqFactions[i].baseId].units.concat(units)
   }
   return Object.values(res)
@@ -13,9 +13,10 @@ const mapFactionUnits = (unitList = [], reqFactions = []) =>{
 const mapRaidFactions = (requirements = {}, raidDef = {}, reqFactions = {})=>{
   if(!requirements?.faction || requirements?.faction.length === 0) return
   for(let i in requirements?.faction){
-    if(!reqFactions[requirements.faction[i]]) reqFactions[requirements.faction[i]] = { baseId: requirements.faction[i], nameKey: raidDef.nameKey }
+
+    if(!reqFactions[requirements.faction[i]]) reqFactions[requirements.faction[i]] = { baseId: requirements.faction[i], nameKey: raidDef.nameKey, raidId: raidDef.baseId }
     if(!raidDef?.faction[requirements.faction[i]]) raidDef.faction[requirements.faction[i]] = {}
-    raidDef.faction[requirements.faction[i]].baseId = requirements.baseId
+    raidDef.faction[requirements.faction[i]].baseId = requirements.faction[i]
     raidDef.faction[requirements.faction[i]].rarity = requirements.rarity
     raidDef.faction[requirements.faction[i]].tier = requirements.gear
     raidDef.faction[requirements.faction[i]].relic = requirements.relic
@@ -48,7 +49,10 @@ module.exports = async(raids = [], unitList = [])=>{
   }
   let factions = mapFactionUnits(unitList, Object.values(reqFactions))
   if(factions?.length > 0){
-    for(let i in factions) await mongo.set('factions', { _id: factions[i].baseId }, factions[i])
+    for(let i in factions){
+      await mongo.set('factions', { _id: factions[i].baseId }, factions[i])
+      await mongo.set('raidFactions', { _id: factions[i].baseId }, factions[i])
+    }
   }
   for(let i in raidDef){
     if(!raidDef[i].faction || Object.values(raidDef[i].faction).length == 0) continue
