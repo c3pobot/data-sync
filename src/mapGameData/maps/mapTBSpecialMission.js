@@ -1,6 +1,7 @@
 'use strict'
 const mongo = require('mongoclient')
 const getFile = require('src/helpers/getFile')
+const mapTBGuides = require('./mapTBGuides')
 
 let skipSet = new Set(['alignment_dark', 'alignment_light', 'alignment_neutral'])
 const getPhase = (zoneId)=>{
@@ -35,13 +36,15 @@ const getCampaign = (convertCampain = {}, campaignMapList = [], reqCategory)=>{
   let res = {
     category: mission.entryCategoryAllowed?.categoryId || [],
     requiredUnits: mission.entryCategoryAllowed?.mandatoryRosterUnit?.map(x=>x.id) || [],
-    rarity: mission.entryCategoryAllowed?.minimumUnitRarity || 1, relicTier: ((mission.entryCategoryAllowed?.minimumRelicTier || 2) - 2),
+    rarity: mission.entryCategoryAllowed?.minimumUnitRarity || 1,
+    relicTier: ((mission.entryCategoryAllowed?.minimumRelicTier || 2) - 2),
     tier: mission.entryCategoryAllowed?.minimumUnitTier,
     numUnits: mission.entryCategoryAllowed?.minimumRequiredUnitQuantity || 0,
     gp: mission.entryCategoryAllowed?.minimumGalacticPower || 0,
     combatType: mission.combatType,
     units: []
   }
+  if(res.relicTier < 0) res.relicTier = 0
   for(let i in res.category){
     if(reqCategory.has(res.category[i])) continue
     reqCategory.add(res.category[i])
@@ -69,14 +72,14 @@ const mapFactions = (reqCategory, lang = {}, categoryList = [], unitList = [])=>
     if(!category?.id) continue
 
     res[id] = { id: id, nameKey: lang[category.descKey] || category.descKey, units : [] }
-    if(units?.length > 0) res[id].units = units.map(x=>{ return { baseId: x.baseId, nameKey: lang[x.nameKey] || x.nameKey }})
+    if(units?.length > 0) res[id].units = units.map(x=>{ return { baseId: x.baseId, nameKey: lang[x.nameKey] || x.nameKey, combatType: x.combatType }})
   }
   return res
 }
 const mapFactionUnits = (data = {}, category = [], factions = {})=>{
   for(let i in category){
     if(!factions[category[i]]?.units) continue
-    data.units = data?.units?.concat(factions[category[i]]?.units)
+    data.units = data?.units?.concat(factions[category[i]]?.units?.filter(x=>x.combatType === data.combatType))
   }
 }
 const mapRequiredUnits = (data = {}, requiredUnits = [], lang = {}, units = [])=>{
@@ -94,7 +97,7 @@ const mapUnits = async(data = [], lang = {}, factions = {}, units = [])=>{
     if(data[i].id) await mongo.set('tbSpecialMission', { _id: data[i].id }, data[i])
   }
 }
-const mapTB = async(tbDef = {}, campaignList = [], unitList = [], categoryList = [], lang = {})=>{
+const mapTB = async(tbDef = {}, campaignList = [], unitList = [], categoryList = [], lang = {}, journeyGuides = [])=>{
   let campaign = campaignList.find(x=>x.id === tbDef.id)
   if(!campaign?.campaignMap) return
 
@@ -114,6 +117,9 @@ const mapTB = async(tbDef = {}, campaignList = [], unitList = [], categoryList =
 
   let factions = mapFactions(reqCategory, lang, categoryList, unitList)
   await mapUnits(data, lang, factions, unitList)
+  for(let i in data){
+    if(data[i].rewardUnit || data[i].rewardZone) journeyGuides.push(data[i])
+  }
 }
 module.exports = async(gameVersion, localeVersion)=>{
   let [ tbList, campaignList, unitList, categoryList, lang ] = await Promise.all([
@@ -126,7 +132,9 @@ module.exports = async(gameVersion, localeVersion)=>{
 
   unitList = unitList?.filter(x=>x.rarity == 7 && x.obtainable == true && x.obtainableTime == 0)
   if(!tbList || !campaignList || !unitList || !categoryList || !lang) return
-
-  for(let i in tbList) await mapTB(tbList[i], campaignList, unitList, categoryList, lang)
-  return true
+  let journeyGuides = []
+  for(let i in tbList) await mapTB(tbList[i], campaignList, unitList, categoryList, lang, journeyGuides)
+  let status = true
+  if(journeyGuides.length > 0) status = await mapTBGuides(journeyGuides, lang, unitList)
+  return status
 }

@@ -122,14 +122,12 @@ const startSync = async()=>{
         if(mapDataVersions?.length > 0) mapDataVersions = mapDataVersions.filter(x=>x.gameVersion !== obj?.latestGamedataVersion || x.localeVersion !== obj?.latestLocalizationBundleVersion)
         if(mapDataVersions?.length > 0) updateNeeded = true
       }
-      if(!updateNeeded){
-        await updateAutoComplete(obj)
-      }
       if(updateNeeded){
         await updateData()
         dataVersions.updateInProgress = false
       }
       if(MAP_SUMMON) await mapSummoner(obj)
+      await updateAutoComplete(obj)
     }
     setTimeout(startSync, UPDATE_INTERVAL * 1000)
     //setTimeout(startSync, 5 * 1000)
