@@ -1,5 +1,6 @@
 'use strict'
 const mongo = require('mongoclient')
+const remoteMongo = require('src/remoteMongo')
 const getFile = require('src/helpers/getFile')
 
 const mapUnitTiers = (skill = {}, unit = {}, summonedList = {})=>{
@@ -33,7 +34,9 @@ const mapUnit = async(unit = {}, statProgressionList = [], lang = {}, unitList =
   for(let i in unit.baseStat.stat){
     tempObj.scaler[unit.baseStat.stat[i].unitStatId] = +unit.baseStat.stat[i].scalar
   }
-  await mongo.set('summonerData', { _id: tempObj.id }, tempObj)
+  let status = await remoteMongo.set('summonerData', { _id: tempObj.id }, tempObj)
+  if(status) await mongo.set('summonerData', { _id: tempObj.id }, tempObj)
+  return true
 }
 module.exports = async(gameVersion, localeVersion, assetVersion)=>{
   let summonerList = await mongo.find('summonerList', {})
@@ -59,6 +62,6 @@ module.exports = async(gameVersion, localeVersion, assetVersion)=>{
     unit.summoner = summonedList[i].baseId
     array.push(mapUnit(unit, statProgressionList, lang))
   }
-  await Promise.all(array)
-  return true
+  let res = await Promise.all(array)
+  if(res?.filter(x=>x)?.length === array?.length) return true
 }

@@ -6,10 +6,12 @@ log.setLevel(logLevel);
 require('./assetGetter')
 
 const mongo = require('mongoclient')
+const remoteMongo = require('./remoteMongo')
 const exchange = require('./helpers/exchange')
 const swgohClient = require('./swgohClient')
 const gitClient = require('./gitClient')
 const updateAutoComplete = require('./updateAutoComplete')
+const mapSummoner = require('./mapSummoner')
 //const consumer = require('./consumer')
 const mapPlatoons = require('./mapPlatoons')
 const checkEvents = require('./events')
@@ -17,6 +19,7 @@ const updateData = require('./updateData')
 const { dataVersions } = require('./helpers/dataVersions')
 const UPDATE_INTERVAL = +process.env.UPDATE_INTERVAL || 30
 const GIT_REPO = process.env.GIT_DATA_REPO, DATA_DIR = process.env.DATA_DIR || '/app/data/files'
+let MAP_SUMMON = process.env.MAP_SUMMON || false
 const cloneGameData = async()=>{
   try{
     let status
@@ -51,6 +54,7 @@ const checkExchange = ()=>{
 const checkMongo = ()=>{
   try{
     let status = mongo.status()
+    if(status && MAP_SUMMON) status = remoteMongo.status()
     if(status){
       checkAPIReady()
       return
@@ -114,7 +118,7 @@ const startSync = async()=>{
       }
       if(!updateNeeded){
         let mapDataVersions = await mongo.find('versions', {}, { gameVersion: 1, localeVersion: 1 })
-        if(mapDataVersions && mapDataVersions?.length !== 22) updateNeeded = true
+        if(mapDataVersions && mapDataVersions?.length !== 21) updateNeeded = true
         if(mapDataVersions?.length > 0) mapDataVersions = mapDataVersions.filter(x=>x.gameVersion !== obj?.latestGamedataVersion || x.localeVersion !== obj?.latestLocalizationBundleVersion)
         if(mapDataVersions?.length > 0) updateNeeded = true
       }
@@ -125,6 +129,7 @@ const startSync = async()=>{
         await updateData()
         dataVersions.updateInProgress = false
       }
+      if(MAP_SUMMON) await mapSummoner(obj)
     }
     setTimeout(startSync, UPDATE_INTERVAL * 1000)
     //setTimeout(startSync, 5 * 1000)

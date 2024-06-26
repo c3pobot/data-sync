@@ -1,5 +1,6 @@
 'use strict'
 const mongo = require('mongoclient')
+const remoteMongo = require('src/remoteMongo')
 const getFile = require('src/helpers/getFile')
 
 const ignoreSet = new Set(['GEONOSIANBROODALPHA', 'SITHPALPATINE', 'GRANDMASTERLUKE'])
@@ -46,7 +47,7 @@ const mapUnit = (unit = {}, abilityList = [], effectList = [], skillList = [])=>
   mapAbilities(unit.limitBreakRef, unit, summonEffects, abilityList, skillList, effectList)
   mapAbilities(unit.leaderAbilityRef, unit, summonEffects, abilityList, skillList, effectList)
   //if(summonEffects?.length > 0) await mongo.set('summonerList', { _id: unit.baseId }, { baseId: unit.baseId, skills: summonEffects.filter(x=>x.tiers?.filter(y=>y.summonId).length) })
-  
+
  return summonEffects.filter(x=>x.tiers?.filter(y=>y.summonId).length)
 }
 module.exports = async(gameVersion, localeVersion, assetVersion)=>{
@@ -59,11 +60,17 @@ module.exports = async(gameVersion, localeVersion, assetVersion)=>{
   unitList = unitList?.filter(x=>x.rarity == 7 && x.obtainable == true && x.obtainableTime == 0)
   if(!skillList || !abilityList || !effectList || !unitList) return
 
-  let array = []
+  let status = true
   for(let i in unitList){
   	let tempObj = mapUnit(unitList[i], abilityList, effectList, skillList)
-     if(tempObj?.length > 0) await mongo.set('summonerList', { _id: unitList[i].baseId}, { baseId: unitList[i].baseId, skills: tempObj })
+     if(tempObj?.length > 0){
+       let tempStatus = await remoteMongo.set('summonerList', { _id: unitList[i].baseId}, { baseId: unitList[i].baseId, skills: tempObj })
+       if(tempStatus){
+         await mongo.set('summonerList', { _id: unitList[i].baseId}, { baseId: unitList[i].baseId, skills: tempObj })
+       }else{
+         status = false
+       }
+     }
    }
-  await Promise.all(array)
-  return true
+  return status
 }
