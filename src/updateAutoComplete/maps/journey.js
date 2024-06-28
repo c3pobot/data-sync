@@ -1,11 +1,11 @@
 'use strict'
 const mongo = require('mongoclient')
 module.exports = async(gameVersion, localeVersion)=>{
-  let obj = await mongo.find('journeyGuide', {}, { baseId: 1, nameKey: 1, unitNameKey: 1})
+  let obj = await mongo.find('journeyGuide', {}, { baseId: 1, nameKey: 1, unitNameKey: 1, hidden: 1})
   let manualGuides = (await mongo.find('botSettings', { _id: 'manualGuides' }))[0]
   let autoComplete = [], tempSet = new Set()
   for(let i in obj){
-    if(tempSet.has(obj[i].baseId)) continue
+    if(tempSet.has(obj[i].baseId) || obj[i].hidden) continue
     autoComplete.push({ name: obj[i].unitNameKey, value: obj[i].baseId, descKey: obj[i].nameKey })
     tempSet.add(obj[i].baseId)
   }

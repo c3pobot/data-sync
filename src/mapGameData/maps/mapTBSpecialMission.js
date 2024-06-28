@@ -117,9 +117,7 @@ const mapTB = async(tbDef = {}, campaignList = [], unitList = [], categoryList =
 
   let factions = mapFactions(reqCategory, lang, categoryList, unitList)
   await mapUnits(data, lang, factions, unitList)
-  for(let i in data){
-    if(data[i].rewardUnit || data[i].rewardZone) journeyGuides.push(data[i])
-  }
+  for(let i in data) journeyGuides.push(data[i])
 }
 module.exports = async(gameVersion, localeVersion)=>{
   let [ tbList, campaignList, unitList, categoryList, lang ] = await Promise.all([

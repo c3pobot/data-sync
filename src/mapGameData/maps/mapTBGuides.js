@@ -4,12 +4,16 @@ const mongo = require('mongoclient')
 module.exports = async(missions = [], lang = {}, unitList = [])=>{
   if(missions.length === 0) return true
   for(let i in missions){
-    let nameKey
+    let nameKey = missions[i].nameKey
     if(missions[i].rewardUnit?.nameKey) nameKey = missions[i].rewardUnit.nameKey
     if(missions[i].rewardZone) nameKey = `TB ${missions[i].rewardZone} Zone Unlock`
     if(!nameKey) continue
     let guide = { baseId: missions[i]?.rewardUnit?.baseId || missions[i].id, nameKey: nameKey, unitNameKey: nameKey }
     let guideTemplate = { baseId: guide.baseId, descKey: guide.nameKey, name: guide.nameKey, factions: [], groups: [], units: [] }
+    if(!missions[i].rewardUnit || !missions[i].rewardZone){
+      guide.hidden = true
+      guideTemplate.hidden = true
+    }
     let units = [], requiredUnits = [], requiredUnitsSet = new Set()
     let gearReq = {}
     if(missions[i].requirements?.relicTier > 0){
