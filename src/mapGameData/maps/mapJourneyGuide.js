@@ -3,6 +3,7 @@ const mongo = require('mongoclient')
 const getFile = require('src/helpers/getFile')
 const mapGuideTemplates = require('./mapGuideTemplates')
 
+
 const mapFaction = (faction = [], lang = {})=>{
   let res = {}
   for(let i in faction){
@@ -120,6 +121,7 @@ const mapRequirementItem = (requirementItem = {}, dataList = {}, tempEvent = {})
 const mapGuide = async(guideDef = {}, dataList = {}, autoComplete = [], rewardUnit = {})=>{
   let requirements = dataList.requirementList.find(x=>x.id === guideDef.additionalActivationRequirementId)
   let tempUnit = dataList.units[guideDef.unitBaseId]
+  if(!tempUnit?.nameKey) tempUnit = (await mongo.find('tempGuideUnits', { _id: guideDef.unitBaseId }))[0]
   let tempEvent = {
     baseId: guideDef.unitBaseId,
     unitNameKey: tempUnit?.nameKey,
@@ -133,6 +135,7 @@ const mapGuide = async(guideDef = {}, dataList = {}, autoComplete = [], rewardUn
     requirement: {},
     tier: {}
   }
+
   if(requirements?.requirementItem?.length > 0){
     for(let i in requirements.requirementItem) mapRequirementItem(requirements.requirementItem[i], dataList, tempEvent)
   }
