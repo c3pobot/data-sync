@@ -8,9 +8,9 @@ module.exports = async(missions = [], lang = {}, unitList = [])=>{
     if(missions[i].rewardUnit?.nameKey) nameKey = missions[i].rewardUnit.nameKey
     if(missions[i].rewardZone) nameKey = `TB ${missions[i].rewardZone} Zone Unlock`
     if(!nameKey) continue
-    let guide = { baseId: missions[i]?.rewardUnit?.baseId || missions[i].id, nameKey: nameKey, unitNameKey: nameKey }
-    let guideTemplate = { baseId: guide.baseId, descKey: guide.nameKey, name: guide.nameKey, factions: [], groups: [], units: [] }
-    if(!missions[i].rewardUnit || !missions[i].rewardZone){
+    let guide = { baseId: missions[i]?.rewardUnit?.baseId || missions[i].id, nameKey: nameKey, unitNameKey: nameKey, hidden: false }
+    let guideTemplate = { baseId: guide.baseId, descKey: guide.nameKey, hidden: false, name: guide.nameKey, factions: [], groups: [], units: [] }
+    if(!missions[i].rewardUnit && !missions[i].rewardZone){
       guide.hidden = true
       guideTemplate.hidden = true
     }
