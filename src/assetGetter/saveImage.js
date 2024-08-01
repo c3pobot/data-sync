@@ -11,7 +11,7 @@ let ROUTING_KEY = process.env.GAME_DATA_TOPIC || `${NAME_SPACE}.data-sync.assets
 const FetchImage = async(thumbnailName, version)=>{
   if(!AE_URI || !thumbnailName || !version) return
   let assest = thumbnailName?.replace('tex.', '')
-  return await fetch(`${AE_URI}/Asset/single?forceReDownload=true&version=${version}&assetName=${assest}`)
+  return await fetch(`${AE_URI}/Asset/single?forceReDownload=true&version=${version}&assetName=${assest}&assetOS=1`)
 }
 
 module.exports = async(version, thumbnailName, dir, base64Img)=>{
