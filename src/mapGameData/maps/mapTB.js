@@ -45,6 +45,9 @@ const mapTBDef = async(tbDef = {}, lang = {}, autoComplete = [])=>{
     let i = tbDef.conflictZoneDefinition.length
     while(i--) mapZoneDefinition(tbDef.conflictZoneDefinition[i].zoneDefinition, tbDef.conflictZoneDefinition[i].territoryBattleZoneUnitType, tbDef.conflictZoneDefinition[i].forceAlignment, lang)
   }
+  let tbHistory = { id: tbDef.id, nameKey: tbDef.nameKey, stats: {}}
+  tbDef.statCategory?.map(x=>{ tbHistory.stats[x.id] = { id: x.id, nameKey: lang[x.nameKey] || x.nameKey } })
+  await mongo.set('tbHistoryDef', { _id: tbDef.id }, tbHistory)
   await mongo.set('tbDefinition', {_id: tbDef.id}, tbDef)
   autoComplete.push({ name: tbDef.nameKey, value: tbDef.id })
 }

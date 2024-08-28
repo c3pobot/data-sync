@@ -4,6 +4,7 @@ const mongo = require('mongoclient')
 const getFile = require('src/helpers/getFile')
 const getSkillList = require('./getSkillList')
 const effectMap = require(`src/enums/effectMap`)
+const manualLangMap = { BattleEffect_BonusTurn: 'Bonus Turn'}
 
 const mapUnitSkill = (skillReference = [], skill = {}, skillList = {})=>{
   let i = skillReference.length
@@ -44,7 +45,7 @@ const addTags = async(unit = {}, skill = {}, tags = [], effects)=>{
 
     //let effect = effects.find(x=>x.nameKey === tags[i].nameKey)
     if(!effects[tags[i].nameKey]) continue
-    
+
     if(!effects[tags[i].nameKey].units[skill.id]){
       if(!effects[tags[i].nameKey].savedToDb){
         await mongo.set('effects', { _id: effects[tags[i].nameKey].id }, { id: effects[tags[i].nameKey].id, nameKey: effects[tags[i].nameKey].nameKey, descKey: effects[tags[i].nameKey].descKey, locKeys: effects[tags[i].nameKey].locKeys })
@@ -122,7 +123,7 @@ const checkEffect = (id, dataList)=>{
 }
 const checkTags = (effect, dataList)=>{
   let tags = []
-  if(effect.descriptiveTag?.filter(x=>x.tag.startsWith('countable_') || x.tag.startsWith('armorshred_')).length == 0) return tags
+  if(effect.descriptiveTag?.filter(x=>x.tag.startsWith('countable_') || x.tag.startsWith('armorshred_') || x.tag.startsWith('bonus_turn')).length == 0) return tags
   for(let i in effect.descriptiveTag){
     let tempTag = checkTag(effect.descriptiveTag[i].tag, effect, dataList)
     if(tempTag) tags.push(tempTag)
@@ -143,7 +144,7 @@ const checkTag = (tag, effect, dataList)=>{
 
   if(!tempTag.persistentLocKey && effectMap[tag]) tempTag.persistentLocKey = effectMap[tag]
 
-  let effectName = cleanEffectName(dataList.lang[tempTag.persistentLocKey]), tempName
+  let effectName = cleanEffectName(dataList.lang[tempTag.persistentLocKey] || manualLangMap[tempTag.persistentLocKey]), tempName
   if(effectName) tempName = effectName.split(":")
   if(tempName){
     if(tempName[0]) tempTag.nameKey = tempName[0].trim()
@@ -195,6 +196,7 @@ module.exports = async(gameVersion, localeVersion)=>{
     if(!effects[nameKey]) effects[nameKey] = { id: i.trim(), nameKey: nameKey, descKey: descKey, locKeys: {}, tags: {}, units: {} }
     effects[nameKey].locKeys[i.trim()] = i.trim()
   }
+  effects['Bonus Turn'] = { id: 'BattleEffect_BonusTurn', nameKey: 'Bonus Turn', descKey: 'Bonus Turn', tags: {}, units: {}, locKeys: { BattleEffect_BonusTurn: 'BattleEffect_BonusTurn'} }
   let array = [], dataList = { langArray: langArray, lang: lang, effectList: effectList, abilityList: abilityList, skillList: skillList }
   for(let i in units) await checkUnit(units[i], dataList, effects)
   /*
