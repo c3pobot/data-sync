@@ -10,7 +10,7 @@ const createPublisher = async()=>{
       setTimeout(createPublisher, 5000)
       return
     }
-    publisher = rabbitmq.createPublisher({ confirm: true, exchanges: [{ exchange: EXCHANGE_NAME, type: 'topic', durable: true, maxAttempts: 5 }]})
+    publisher = rabbitmq.createPublisher({ confirm: true, exchanges: [{ exchange: EXCHANGE_NAME, type: 'topic', maxAttempts: 5 }]})
     publisherReady = true
     log.info(`${POD_NAME} game-data publisher is ready...`)
     return

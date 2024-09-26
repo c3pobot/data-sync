@@ -37,7 +37,7 @@ const start = async()=>{
       return
     }
     if(consumer) await consumer.close()
-    consumer = rabbitmq.createConsumer({ consumerTag: POD_NAME, concurrency: 1, qos: { prefetchCount: 1 }, queue: QUE_NAME, queueOptions: { durable: true, arguments: { 'x-queue-type': 'quorum', 'x-message-ttl': 600000 } } }, processMsg)
+    consumer = rabbitmq.createConsumer({ consumerTag: POD_NAME, concurrency: 1, qos: { prefetchCount: 1 }, queue: QUE_NAME, queueOptions: { arguments: { 'x-message-ttl': 600000 } } }, processMsg)
     /*
     consumer.on('error', (err)=>{
       log.info(err)
