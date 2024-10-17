@@ -44,7 +44,7 @@ const createPublisher = ()=>{
       setTimeout(createPublisher, 5000)
       return
     }
-    publisher = rabbitmq.createPublisher({ confirm: true, queues:[{queue: QUE_NAME, durable: true, arguments: { 'x-queue-type': 'quorum', 'x-message-ttl': 600000 }}]})
+    publisher = rabbitmq.createPublisher({ confirm: true, queues:[{queue: QUE_NAME, arguments: { 'x-message-ttl': 600000 }}]})
     log.info(`${POD_NAME} asset publisher is ready...`)
   }catch(e){
     log.error(e)
