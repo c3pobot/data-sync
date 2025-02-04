@@ -1,6 +1,5 @@
 'use strict'
 const mongo = require('mongoclient')
-const remoteMongo = require('src/remoteMongo')
 const getFile = require('src/helpers/getFile')
 
 const ignoreSet = new Set(['GEONOSIANBROODALPHA', 'SITHPALPATINE', 'GRANDMASTERLUKE'])
@@ -63,14 +62,9 @@ module.exports = async(gameVersion, localeVersion, assetVersion)=>{
   let status = true
   for(let i in unitList){
   	let tempObj = mapUnit(unitList[i], abilityList, effectList, skillList)
-     if(tempObj?.length > 0){
-       let tempStatus = await remoteMongo.set('summonerList', { _id: unitList[i].baseId}, { baseId: unitList[i].baseId, skills: tempObj })
-       if(tempStatus){
-         await mongo.set('summonerList', { _id: unitList[i].baseId}, { baseId: unitList[i].baseId, skills: tempObj })
-       }else{
-         status = false
-       }
-     }
+    if(tempObj?.length > 0){
+       await mongo.set('summonerList', { _id: unitList[i].baseId}, { baseId: unitList[i].baseId, skills: tempObj })
+    }     
    }
   return status
 }

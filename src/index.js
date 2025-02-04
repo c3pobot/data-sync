@@ -6,7 +6,6 @@ log.setLevel(logLevel);
 require('./assetGetter')
 
 const mongo = require('mongoclient')
-const remoteMongo = require('./remoteMongo')
 const exchange = require('./helpers/exchange')
 const swgohClient = require('./swgohClient')
 const gitClient = require('./gitClient')
@@ -54,7 +53,6 @@ const checkExchange = ()=>{
 const checkMongo = ()=>{
   try{
     let status = mongo.status()
-    if(status && MAP_SUMMON) status = remoteMongo.status()
     if(status){
       checkAPIReady()
       return
