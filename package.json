@@ -29,7 +29,7 @@
     "logger": "github:c3pobot/logger",
     "mongoclient": "github:c3pobot/mongoclient",
     "node-fetch": "^2.6.7",
-    "rabbitmq-client": "^4.5.3",
+    "rabbitmq-client": "^5.0.2",
     "shelljs": "^0.8.5",
     "uuid": "^8.3.2"
   }

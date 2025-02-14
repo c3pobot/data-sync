@@ -77,6 +77,7 @@ const MapPlatoons = async(tbData = {})=>{
     let platoons = {}
     let tbDef = (await mongo.find('tbDefinition', {_id: tbData.definitionId}, {nameKey: 1, reconZoneDefinition: 1, conflictZoneDefinition: 1, forceAlignment:1 }))[0]
     let locale = (await mongo.find('localeFiles', {_id: 'ENG_US'}))[0]
+    if(!locale || !tbDef) return
     if(tbDef?.reconZoneDefinition && tbData.reconZoneStatus){
       for(let i in tbData.reconZoneStatus){
         let pDef = tbDef?.reconZoneDefinition?.find(x=>x?.zoneDefinition?.zoneId === tbData.reconZoneStatus[i].zoneStatus?.zoneId)
@@ -92,7 +93,7 @@ const MapPlatoons = async(tbData = {})=>{
         let sort = await GetSort(type, conflict)
         if(!platoons[id]) platoons[id] = { id: id, phase: phase, conflict: conflict, linkedConflictId: pDef?.zoneDefinition?.linkedConflictId, squads: [], type: type, sort: sort, totalPoints: 0, maxUnit: pDef?.zoneDefinition?.maxUnitCountPerPlayer, bonus: tbData.reconZoneStatus[i].zoneStatus?.zoneId?.includes('_bonus_') }
 
-        if(!platoons[id].nameKey) platoons[id].nameKey = locale[pDef?.zoneDefinition?.nameKey] || pDef?.zoneDefinition?.nameKey
+        if(!platoons[id]?.nameKey) platoons[id].nameKey = locale[pDef?.zoneDefinition?.nameKey] || pDef?.zoneDefinition?.nameKey
         for(let p in tbData.reconZoneStatus[i].platoon){
           let squad = await GetSquads(tbData.reconZoneStatus[i].platoon[p]?.squad, pDef?.platoonDefinition.find(x=>x?.id === tbData.reconZoneStatus[i].platoon[p]?.id), pDef?.unitRarity, pDef?.unitRelicTier)
           if(squad){

@@ -4,19 +4,18 @@ const rabbitmq = require('rabbitmq-client');
 
 const POD_NAME = process.env.POD_NAME || 'data-sync'
 const connectOptions = {
-  hostname: process.env.MESSAGE_BUS_HOST || 'rabbitmq-cluster.datastore',
+  hostname: process.env.MESSAGE_BUS_HOST || 'rabbitmq',
   port: +process.env.MESSAGE_BUS_PORT || 5672,
   username: process.env.MESSAGE_BUS_USER,
   password: process.env.MESSAGE_BUS_PASS,
+  connectionName: POD_NAME
 }
 const client = new rabbitmq.Connection(connectOptions)
-
 client.on('error', (err)=>{
-  log.error(`${POD_NAME} rabbitmq error...`)
-  //log.error(err)
+  log.error(err)
+})
+client.on('connection', ()=>{
+  log.info(`${POD_NAME} rabbitmq client connected...`)
 })
 
-client.on('connection', ()=>{
-  log.info(`${POD_NAME} rabbitmq client connection successfully (re)established`)
-})
 module.exports = client

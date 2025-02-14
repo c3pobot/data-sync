@@ -2,6 +2,8 @@
 const log = require('logger')
 const mongo = require('mongoclient')
 const swgohClient = require('./swgohClient')
+const rabbitmq = require('./rabbitmq')
+
 const updateAutoComplete = require('./updateAutoComplete')
 const { dataVersions } = require('./helpers/dataVersions')
 
@@ -10,13 +12,9 @@ const getGameFiles = require('./getGameFiles')
 const mapGameData = require('./mapGameData')
 const buildConfigMaps = require('./buildConfigMaps')
 
-
-let NAME_SPACE = process.env.NAME_SPACE || 'default'
-let ROUTING_KEY = process.env.GAME_DATA_TOPIC || `${NAME_SPACE}.data-sync.game-data`
-const exchange = require('./helpers/exchange')
 const publishVersions = async()=>{
   try{
-    let status = await exchange.send(ROUTING_KEY, { gameVersion: dataVersions.gameVersion, localeVersion: dataVersions.localeVersion, timestamp: Date.now() })
+    let status = await rabbitmq.notify({ cmd: 'versionNotify', gameVersion: dataVersions.gameVersion, localeVersion: dataVersions.localeVersion, timestamp: Date.now() })
     if(status){
       log.info(`published new gameVersion ${dataVersions.gameVersion}... New localeVersion ${dataVersions.localeVersion} to rabbitmq...`)
       return

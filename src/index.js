@@ -3,10 +3,10 @@ const log = require('logger')
 const fs = require('fs')
 let logLevel = process.env.LOG_LEVEL || log.Level.INFO;
 log.setLevel(logLevel);
-require('./assetGetter')
 
 const mongo = require('mongoclient')
-const exchange = require('./helpers/exchange')
+const exchange = require('./exchange')
+const rabbitmq = require('./rabbitmq')
 const swgohClient = require('./swgohClient')
 const gitClient = require('./gitClient')
 const updateAutoComplete = require('./updateAutoComplete')
@@ -16,10 +16,12 @@ const mapPlatoons = require('./mapPlatoons')
 const checkEvents = require('./events')
 const updateData = require('./updateData')
 const { dataVersions } = require('./helpers/dataVersions')
+const updateLocale = require('./updateLocale')
+
 const UPDATE_INTERVAL = +process.env.UPDATE_INTERVAL || 30
 const GIT_REPO = process.env.GIT_DATA_REPO, DATA_DIR = process.env.DATA_DIR || '/app/data/files'
 let MAP_SUMMON = process.env.MAP_SUMMON || false
-const cloneGameData = async()=>{
+const CloneGameData = async()=>{
   try{
     let status
     if(fs.existsSync(`${DATA_DIR}/.git`)) status = await gitClient.pull(DATA_DIR)
@@ -28,75 +30,61 @@ const cloneGameData = async()=>{
       status = await gitClient.clone({ repo: GIT_REPO, dir: DATA_DIR })
     }
     if(status){
-      checkExchange()
+      CheckRabbitMQ()
       return
     }
-    setTimeout(cloneGameData, 5000)
+    setTimeout(CloneGameData, 5000)
   }catch(e){
     log.error(e)
-    setTimeout(cloneGameData, 5000)
+    setTimeout(CloneGameData, 5000)
   }
 }
-const checkExchange = ()=>{
+const CheckRabbitMQ = ()=>{
   try{
-    let status = exchange.status()
-    if(status){
-      checkMongo()
+    if(!rabbitmq?.status) log.debug(`rabbitmq is not ready...`)
+    if(rabbitmq?.status){
+      log.debug(`rabbitmq is ready...`)
+      CheckMongo()
       return
     }
-    setTimeout(checkExchange, 5000)
+    setTimeout(CheckRabbitMQ, 5000)
   }catch(e){
     log.error(e)
-    setTimeout(checkExchange, 5000)
+    setTimeout(CheckRabbitMQ, 5000)
   }
 }
-const checkMongo = ()=>{
+const CheckMongo = ()=>{
   try{
     let status = mongo.status()
     if(status){
-      checkAPIReady()
+      CheckAPIReady()
       return
     }
-    setTimeout(checkMongo, 5000)
+    setTimeout(CheckMongo, 5000)
   }catch(e){
     log.error(e);
-    setTimeout(checkMongo, 5000)
+    setTimeout(CheckMongo, 5000)
   }
 }
-const checkAPIReady = async()=>{
+const CheckAPIReady = async()=>{
   try{
     let obj = await swgohClient('metadata')
     if(obj?.latestGamedataVersion){
       log.info('API is ready data-sync...')
       //StartConsumer()
+      exchange.start()
       startSync()
       syncEvents()
       mapPlatoons()
       return
     }
-    setTimeout(checkAPIReady, 5000)
+    setTimeout(CheckAPIReady, 5000)
   }catch(e){
     log.error(e)
-    setTimeout(checkAPIReady, 5000)
+    setTimeout(CheckAPIReady, 5000)
   }
 }
-/*
-const StartConsumer = async()=>{
-  try{
-    let status = await consumer.start()
-    if(status){
-      StartSync()
-      UpdateDataCronAutoComplete()
-      SyncEvents()
-      return
-    }
-    setTimeout(StartConsumer, 5000)
-  }catch(e){
-    log.error(e)
-    setTimeout(StartConsumer, 5000)
-  }
-}
-*/
+
 const startSync = async()=>{
   try{
     if(!dataVersions.updateInProgress){
@@ -124,6 +112,7 @@ const startSync = async()=>{
         await updateData()
         dataVersions.updateInProgress = false
       }
+      await updateLocale(obj?.latestLocalizationBundleVersion)
       if(MAP_SUMMON) await mapSummoner(obj)
       await updateAutoComplete(obj)
     }
@@ -144,4 +133,4 @@ const syncEvents = async()=>{
   }
 }
 
-cloneGameData()
+CloneGameData()
