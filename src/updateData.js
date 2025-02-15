@@ -31,7 +31,6 @@ module.exports = async(force = false) =>{
     dataVersions.updateInProgress = true
     let metaData = await swgohClient('metadata');
     if(!metaData?.assetVersion || !metaData?.latestGamedataVersion || !metaData?.latestLocalizationBundleVersion) return
-
     let localVersions = await getGameFiles(metaData)
     if(!localVersions) return
     if(localVersions.gameVersion !== metaData.latestGamedataVersion || localVersions.localeVersion !== metaData.latestLocalizationBundleVersion) return

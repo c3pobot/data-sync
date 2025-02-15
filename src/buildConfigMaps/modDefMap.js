@@ -1,6 +1,7 @@
 'use strict'
 const mongo = require('mongoclient')
 const getFile = require('src/helpers/getFile')
+const enumSlots = { 2: 'Square', 3: 'Arrow', 4: 'Diamond', 5: 'Triangle', 6: 'Circle', 7: 'Cross' }
 
 module.exports = async(gameVersion, localeVersion)=>{
   let [ statModList, statModSetList, lang ] = await Promise.all([
@@ -17,7 +18,8 @@ module.exports = async(gameVersion, localeVersion)=>{
       if(modSet) setList[statModList[i].setId] = modSet
     }
     if(!modSet) continue
-    data[statModList[i].id] = { defId: statModList[i].id, rarity: statModList[i].rarity, slot: +statModList[i].slot, setId: +statModList[i].setId, nameKey: lang[modSet.name] || modSet.name, setCount: modSet.setCount, icon: modSet.icon }
+    let slotNameKey = `${lang[`StatMod_Name_Slot_${(+statModList[i].slot-1)}`]} (${enumSlots[statModList[i].slot]})`
+    data[statModList[i].id] = { defId: statModList[i].id, rarity: statModList[i].rarity, slot: +statModList[i].slot, slotNameKey: slotNameKey, setId: +statModList[i].setId, nameKey: lang[modSet.name] || modSet.name, setCount: modSet.setCount, icon: modSet.icon }
   }
   await mongo.set('configMaps', { _id: 'modDefMap' }, { gameVersion: gameVersion, localeVersion: localeVersion, data: data })
   return true

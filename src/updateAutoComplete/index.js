@@ -21,7 +21,7 @@ const checkData = async(gameVersion, localeVersion, force = false)=>{
   }
   return missing
 }
-module.exports = async({ latestGamedataVersion, latestLocalizationBundleVersion }, force)=>{
+module.exports = async({ latestGamedataVersion, latestLocalizationBundleVersion, config }, force)=>{
   let missing = await checkData(latestGamedataVersion, latestLocalizationBundleVersion, force)
   if(!missing) return
 
@@ -35,7 +35,7 @@ module.exports = async({ latestGamedataVersion, latestLocalizationBundleVersion 
   log.info('Mapping autoComplete...')
   for(let i in missing){
     log.info(`updating autoComplete ${missing[i]}...`)
-    status = await maps[missing[i]](latestGamedataVersion, latestLocalizationBundleVersion)
+    status = await maps[missing[i]](latestGamedataVersion, latestLocalizationBundleVersion, config)
     if(!status) break;
   }
   if(status){
