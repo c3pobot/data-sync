@@ -13,12 +13,13 @@ const getStatMap = (enums = {}, lang = {}, keyMapping = {})=>{
     }
   }
   for(let i in enums){
-    let key = keyMap.find(x=>x.enum.startsWith(i))
+    let enumKey = i?.replace(/_/g, '')
+    let key = keyMap.find(x=>x.enum.startsWith(enumKey))
     if(!key) key = keyMap.find(x=>x.enum.startsWith(i.replace('UNITSTATMAX', 'UNITSTAT')))
-    if(!key) key = staticMap[i]
+    if(!key) key = staticMap[enumKey]
     let nameKey = lang[key?.nameKey] || key?.nameKey
-    if(!nameKey) nameKey = i
-    res[enums[i]] = { statId: enums[i], pct: pct[enums[i]], enum: i, nameKey: nameKey,  }
+    if(!nameKey) nameKey = enumKey
+    res[enums[i]] = { statId: enums[i], pct: pct[enums[i]], enum: enumKey, nameKey: nameKey,  }
   }
   if(Object.values(res)?.length > 0) return res
 }
@@ -28,7 +29,7 @@ module.exports = async(gameVersion, localeVersion)=>{
     getFile('Loc_ENG_US.txt', localeVersion),
     getFile('enums', gameVersion)
   ])
-  
+
   if(!keyMapping || !lang || !enums) return
 
   let statMap = getStatMap(enums['UnitStat'], lang, keyMapping)

@@ -41,11 +41,12 @@ const mapStatEnum = (enums = {}, lang = {})=>{
     if(enumKey) tempLang[enumKey] = { langId: i, nameKey: lang[i] }
   }
   for(let i in enums){
-    res[i] = { id: i, statId: enums[i], pct: pct[enums[i]] }
-    if(tempLang[i]){
-      res[i] = {...res[i],...tempLang[i]}
+    let enumKey = i?.replace(/_/g, '')
+    res[i] = { id: enumKey, statId: enums[i], pct: pct[enums[i]] }
+    if(tempLang[enumKey]){
+      res[enumKey] = {...res[enumKey],...tempLang[enumKey]}
     }else{
-      let stat = i.replace('UNITSTATMAX', 'UNITSTAT')
+      let stat = enumKey.replace('UNITSTATMAX', 'UNITSTAT')
       if(tempLang[stat]) res[i] = {...res[i],...tempLang[stat]}
     }
   }

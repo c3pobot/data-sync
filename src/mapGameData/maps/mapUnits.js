@@ -83,7 +83,6 @@ module.exports = async(gameVersion, localeVersion, assetVersion)=>{
     }else{
       factionArray.push(mapFactions(factionList[i], factionAutoComplete))
     }
-
   }
   await Promise.all(factionArray)
   await Promise.all(hiddenFaction)
