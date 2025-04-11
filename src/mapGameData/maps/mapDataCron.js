@@ -57,42 +57,39 @@ const getTierType = (tier)=>{
   if(tier == 5) return 'faction'
   if(tier == 8) return 'unit'
 }
-const mapCategory = (category = {}, abilityId, targetRule, type, cron, dataList, images)=>{
+const mapCategory = (category = {}, abilityId, targetRule, cron, dataList, images)=>{
   if(category.exlude || !dataList.factions[category.categoryId]) return
   cron.ability[abilityId].target[targetRule] = {
     id: targetRule,
     nameKey: dataList.ability[abilityId]?.nameKey?.replace(/\{0\}/g, dataList.factions[category.categoryId]?.nameKey),
     descKey: dataList.ability[abilityId]?.descKey?.replace(/\{0\}/g, dataList.factions[category.categoryId]?.nameKey)
   }
-  if(type === 'unit') cron.ability[abilityId].target[targetRule].unit = dataList.factions[category.categoryId].units[0]
+  if(dataList.factions[category.categoryId].units?.length == 1) cron.ability[abilityId].target[targetRule].unit = dataList.factions[category.categoryId].units[0]
 }
-const mapCategories = (category = [], abilityId, targetRule, type, cron, dataList, images)=>{
+const mapCategories = (category = [], abilityId, targetRule, cron, dataList, images)=>{
   for(let i in category){
-    mapCategory(category[i], abilityId, targetRule, type, cron, dataList, images)
+    mapCategory(category[i], abilityId, targetRule, cron, dataList, images)
   }
 }
-const mapAffix = (affix = {}, type, cron, dataList, images)=>{
+const mapAffix = (affix = {}, cron, dataList, images)=>{
   if(images.filter(x=>x == affix.scopeIcon).length == 0) images.push(affix.scopeIcon)
   if(affix.statType > 0 && dataList.stats[affix.statType]) cron.stat[affix.statType] = { id: affix.statType, nameKey: dataList.stats[affix.statType].nameKey, pct: dataList.stats[affix.statType].pct, iconKey: affix.scopeIcon }
-  if(!type || !affix.abilityId || !affix.targetRule || !dataList.ability[affix.abilityId]) return
+  if(!affix.abilityId || !affix.targetRule || !dataList.ability[affix.abilityId]) return
   if(!cron.ability[affix.abilityId]) cron.ability[affix.abilityId] = { id: affix.abilityId, iconKey: affix.scopeIcon, target: {} }
   let target = dataList.targetSetList.find(x=>x.id == affix.targetRule)
   if(!target?.category?.category || target?.category?.category?.length == 0) return
-  mapCategories(target?.category?.category, affix.abilityId, affix.targetRule, type, cron, dataList, images)
+  mapCategories(target?.category?.category, affix.abilityId, affix.targetRule, cron, dataList, images)
 }
-const mapAffixSet = (affixTemplateSetId, type, cron, dataList, images)=>{
+const mapAffixSet = (affixTemplateSetId, cron, dataList, images)=>{
   if(!affixTemplateSetId) return
   let affixSet = dataList.affixList.find(x=>x.id == affixTemplateSetId)
-  for(let i in affixSet.affix) mapAffix(affixSet.affix[i], type, cron, dataList, images)
+  for(let i in affixSet.affix) mapAffix(affixSet.affix[i], cron, dataList, images)
 }
-const mapAffixTemplateSetId = (affixTemplateSetId, type, cron, dataList, images)=>{
-  for(let i in affixTemplateSetId) mapAffixSet(affixTemplateSetId[i], type, cron, dataList, images)
+const mapAffixTemplateSetId = (affixTemplateSetId, cron, dataList, images)=>{
+  for(let i in affixTemplateSetId) mapAffixSet(affixTemplateSetId[i], cron, dataList, images)
 }
 const mapTiers = (tiers, cron, dataList, images)=>{
-  for(let i in tiers){
-    let type = getTierType(i)
-    mapAffixTemplateSetId(tiers[i].affixTemplateSetId, type, cron, dataList, images)
-  }
+  for(let i in tiers) mapAffixTemplateSetId(tiers[i].affixTemplateSetId, cron, dataList, images)
 }
 const mapCron = async(cron = {}, cronSet = {}, dataList = {}, images = [])=>{
   cron.stat = {}
