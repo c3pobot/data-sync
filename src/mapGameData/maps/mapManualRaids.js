@@ -4,6 +4,7 @@ const log = require('logger')
 
 module.exports = async(gameVerion, localeVersion)=>{
   let raids = await mongo.find('manualRaids', {})
+  console.log(raids)
   if(!raids || raids?.length === 0) return true
   for(let i in raids){
     if(!raids[i].include){
