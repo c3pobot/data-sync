@@ -124,7 +124,7 @@ const mapGuide = async(guideDef = {}, dataList = {}, autoComplete = [], rewardUn
   if(!tempUnit?.nameKey) tempUnit = (await mongo.find('tempGuideUnits', { _id: guideDef.unitBaseId }))[0]
   let tempEvent = {
     baseId: guideDef.unitBaseId,
-    unitNameKey: tempUnit?.nameKey,
+    unitNameKey: tempUnit?.nameKey || dataList?.manualGuideUnits[guideDef.unitBaseId],
     combatType: tempUnit?.combatType,
     nameKey: dataList.lang[guideDef.titleKey],
     requirementId: guideDef.additionalActivationRequirementId,
@@ -161,7 +161,11 @@ module.exports = async(gameVersion, localeVersion)=>{
     getFile('campaign', gameVersion)
   ])
   if(!unitList || !lang || !factionList || !guideDefList || !requirementList || !challengeList || !campaignList) return
-
+  let tempManualGuideUnits = await mongo.find('manualGuideUnits', {})
+  let manualGuideUnits = {}
+  if(tempManualGuideUnits?.length > 0){
+    for(let i in tempManualGuideUnits) manualGuideUnits[tempManualGuideUnits[i].baseId] = tempManualGuideUnits[i].unitNameKey
+  }
   let campaign, units
   //let guideDef = files['unitGuideDefinition'].filter(x=>x.additionalActivationRequirementId)
   let faction = mapFaction(factionList, lang)
@@ -169,7 +173,7 @@ module.exports = async(gameVersion, localeVersion)=>{
   if(units) campaign = mapCampaign(campaignList, faction, units, lang)
   if(!faction || !campaign || !units ) return
 
-  let i = guideDefList.length, rewardUnit = {}, array = [], autoComplete = [], dataList = { units: units, faction: faction, campaign: campaign, lang: lang, requirementList: requirementList, challengeList: challengeList }
+  let i = guideDefList.length, rewardUnit = {}, array = [], autoComplete = [], dataList = { units: units, faction: faction, campaign: campaign, lang: lang, requirementList: requirementList, challengeList: challengeList, manualGuideUnits: manualGuideUnits }
   while(i--) array.push(mapGuide(guideDefList[i], dataList, autoComplete, rewardUnit))
   await Promise.all(array)
   /*
