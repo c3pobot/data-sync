@@ -46,6 +46,11 @@ const mapUnits = async(unit = {}, lang = {}, skillList = {}, abilityList = [], f
       tempObj.ultimate[ultAbility.id] = { id: ultAbility.id, nameKey: lang[ultAbility.nameKey], descKey: (lang[ultAbility.id.toUpperCase()+'_DESC'] ? lang[ultAbility.id.toUpperCase()+'_DESC']:null) }
     }
   }
+  let skillObj = Object.values(tempObj.skills)
+  if(skillObj?.length > 0){
+    tempObj.zetaCount = +(skillObj.filter(x=>x.zetaTier > 0)?.length || 0)
+    tempObj.omiCount = +(skillObj.filter(x=>x.omiTier > 0)?.length || 0)
+  }
   await mongo.set('units', { _id: unit.baseId }, tempObj)
 }
 const mapFactions = async(faction, factionAutoComplete = [])=>{

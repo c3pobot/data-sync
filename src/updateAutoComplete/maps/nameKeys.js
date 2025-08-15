@@ -9,6 +9,7 @@ const data = {
     "unit2" : "unit",
     "unit3" : "unit",
     "unit4" : "unit",
+    "unit_mods" : "unit",
     "datacron-set" : "datacron-set",
     "journey" : "journey",
     "ga-date" : "ga-date",
