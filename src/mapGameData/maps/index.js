@@ -22,6 +22,6 @@ Cmds.scavengerGear = require('./mapScavengerDef')
 //Cmds.summonerData = require('./updateSummonerData')
 //Cmds.summonerList = require('./mapSummonerList')
 //Cmds.summonerData = require('./mapSummonerData')
-Cmds.conquestUnits = require('./mapConquestUnits')
+//Cmds.conquestUnits = require('./mapConquestUnits')
 Cmds.effects = require('./mapEffects')
 module.exports = Cmds
