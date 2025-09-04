@@ -11,8 +11,11 @@ module.exports = async(journey = {})=>{
   for(let i in units){
     let unit = { baseId: units[i].baseId, combatType: units[i].combatType, nameKey: units[i].nameKey, thumbnailName: units[i].thumbnailName, rarity: units[i].rarity || 0 }
     if(units[i].relic >= 1){
-      unit.rarity = 7
+      unit.rarity = 4
       unit.gear = { nameKey: `R${units[i].relic}`, name: 'relic', value: units[i].relic + 2 }
+      if(units[i].relic >= 3) unit.rarity = 5
+      if(units[i].relic >= 4) unit.rarity = 6
+      if(units[i].relic >= 5) unit.rarity = 7
     }
     if(units[i].tier >= 0) unit.gear = { nameKey: `G${units[i].tier}`, name: 'gear', value: units[i].tier }
     guide.units.push(unit)
