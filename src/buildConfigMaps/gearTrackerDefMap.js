@@ -27,8 +27,8 @@ const findRelicMats = (ingredients = [], materialList = [], lang, relicSalvage =
     if(relicMat[ingredients[i].id]) continue
     let tempMat = materialList.find(x=>x.id === ingredients[i].id)
     if(!tempMat || !tempMat.id) continue
-    if(tempMat.type == 11) relicMat[tempMat.id] = { id: tempMat.id, nameKey: lang[tempMat.nameKey] || tempMat.nameKey, iconKey: tempMat.iconKey, tier: tempMat.tier, mark: tempMat.mark }
-    if(tempMat.type == 12) relicSalvage[tempMat.id] = { id: tempMat.id, nameKey: lang[tempMat.nameKey] || tempMat.nameKey, iconKey: tempMat.iconKey, tier: tempMat.tier, mark: tempMat.mark }
+    if(tempMat.type == 11) relicMat[tempMat.id] = { id: tempMat.id, nameKey: lang[tempMat.nameKey] || tempMat.nameKey, iconKey: tempMat.iconKey, tier: tempMat.tier, mark: tempMat.mark, rarity: tempMat.rarity }
+    if(tempMat.type == 12) relicSalvage[tempMat.id] = { id: tempMat.id, nameKey: lang[tempMat.nameKey] || tempMat.nameKey, iconKey: tempMat.iconKey, tier: tempMat.tier, mark: tempMat.mark, rarity: tempMat.rarity }
   }
 }
 module.exports = async( gameVersion, localeVersion) =>{
@@ -43,16 +43,23 @@ module.exports = async( gameVersion, localeVersion) =>{
   let equipment = equipmentList.filter(x=>x.requiredLevel == 85 && x.obtainableTime == "0")
   let relicList = recipeList.filter(x=>x.type == 10) //type 10 = RECIPE_RELIC
   let abilityList = materialList.filter(x=>x.type == 5 ) //type 5 = SKILL_MATERIAL
+  let modList = materialList.filter(x=>x.type == 9 || x.type == 10) // type 9 = STAT_MOD_SLICING_MATERIAL type 10 = STAT_MOD_OVERCLOCKING_MATERIAL
   if(!relicList || relicList?.length == 0) return
   if(!abilityList || abilityList?.length == 0) return
+  if(!modList || modList?.length == 0) return
 
-  let equip = {}, salvage = {}, components = {}, relicSalvage = {}, relicMat = {}, abilityMat = {}
+  let equip = {}, salvage = {}, components = {}, relicSalvage = {}, relicMat = {}, abilityMat = {}, modMats = {}
 
   for(let i in relicList) findRelicMats( relicList[i].ingredients, materialList, lang, relicSalvage, relicMat)
   for(let i in abilityList){
     if(!lang[abilityList[i].nameKey]) continue;
     if(abilityMat[abilityList[i].id]) continue;
-    abilityMat[abilityList[i].id] = { id: abilityList[i].id, nameKey: lang[abilityList[i].nameKey] || abilityList[i].nameKey, iconKey: abilityList[i].iconKey }
+    abilityMat[abilityList[i].id] = { id: abilityList[i].id, nameKey: lang[abilityList[i].nameKey] || abilityList[i].nameKey, iconKey: abilityList[i].iconKey, tier: abilityList[i].tier, rarity: abilityList[i].rarity }
+  }
+  for(let i in modList){
+    if(!lang[modList[i].nameKey]) continue;
+    if(modMats[modList[i].id]) continue;
+    modMats[modList[i].id] = { id: modList[i].id, nameKey: lang[modList[i].nameKey] || modList[i].nameKey, iconKey: modList[i].iconKey, tier: modList[i].tier, rarity: modList[i].rarity }
   }
   for(let i in equipment){
     if(equip[equipment[i].id]) continue;
@@ -60,6 +67,6 @@ module.exports = async( gameVersion, localeVersion) =>{
     if(!equipment[i].recipeId) continue;
     findRecipe(equipment[i].recipeId, lang, equipmentList, recipeList, components, salvage)
   }
-  await mongo.set('configMaps', { _id: 'gearTrackerDefMap' }, { gameVersion: gameVersion, localeVersion: localeVersion, data: { gear: equip, components: components, salvage: salvage, relicMat: relicMat, relicSalvage: relicSalvage, abilityMat: abilityMat } })
+  await mongo.set('configMaps', { _id: 'gearTrackerDefMap' }, { gameVersion: gameVersion, localeVersion: localeVersion, data: { gear: equip, components: components, salvage: salvage, relicMat: relicMat, relicSalvage: relicSalvage, abilityMat: abilityMat, modMats: modMats } })
   return true
 }
