@@ -93,7 +93,7 @@ const startSync = async()=>{
       if(obj?.latestGamedataVersion && (dataVersions.gameVersion != obj?.latestGamedataVersion || dataVersions.localeVersion != obj?.latestLocalizationBundleVersion)) updateNeeded = true
       if(!updateNeeded){
         let configMapVersions = await mongo.find('configMaps', {}, { gameVersion: 1, localeVersion: 1})
-        if(configMapVersions && configMapVersions?.length !== 3) updateNeeded = true
+        if(configMapVersions && configMapVersions?.length !== 4) updateNeeded = true
         if(configMapVersions?.length > 0) configMapVersions = configMapVersions.filter(x=>x.gameVersion !== obj?.latestGamedataVersion || x.localeVersion !== obj?.latestLocalizationBundleVersion)
         if(configMapVersions?.length > 0) updateNeeded = true
       }

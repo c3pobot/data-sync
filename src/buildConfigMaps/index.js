@@ -5,6 +5,7 @@ const Cmds = {}
 Cmds.statDefMap = require('./statDefMap')
 Cmds.modDefMap = require('./modDefMap')
 Cmds.unitDefMap = require('./unitDefMap')
+Cmds.gearTrackerDefMap = require('./gearTrackerDefMap')
 module.exports = async(gameVersion, localeVersion, force = false)=>{
   let status = true
   for(let i in Cmds){
