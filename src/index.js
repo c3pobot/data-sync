@@ -91,6 +91,7 @@ const startSync = async()=>{
       let updateNeeded = false
       let obj = await swgohClient('metadata')
       if(obj?.latestGamedataVersion && (dataVersions.gameVersion != obj?.latestGamedataVersion || dataVersions.localeVersion != obj?.latestLocalizationBundleVersion)) updateNeeded = true
+
       if(!updateNeeded){
         let configMapVersions = await mongo.find('configMaps', {}, { gameVersion: 1, localeVersion: 1})
         if(configMapVersions && configMapVersions?.length !== 4) updateNeeded = true
@@ -103,8 +104,8 @@ const startSync = async()=>{
         if(gameDataVersion?.version !== obj?.latestGamedataVersion) updateNeeded = true
       }
       if(!updateNeeded){
-        let mapDataVersions = await mongo.find('versions', {}, { gameVersion: 1, localeVersion: 1 })
-        if(mapDataVersions && mapDataVersions?.length !== 21) updateNeeded = true
+        let mapDataVersions = await mongo.find('versions', {}, { _id: 1, gameVersion: 1, localeVersion: 1 })
+        if(mapDataVersions && mapDataVersions?.length !== 20) updateNeeded = true
         if(mapDataVersions?.length > 0) mapDataVersions = mapDataVersions.filter(x=>x.gameVersion !== obj?.latestGamedataVersion || x.localeVersion !== obj?.latestLocalizationBundleVersion)
         if(mapDataVersions?.length > 0) updateNeeded = true
       }
