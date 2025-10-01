@@ -104,6 +104,7 @@ const mapCron = async(cron = {}, cronSet = {}, dataList = {}, images = [])=>{
   mapTiers(cron.tier, cron, dataList, images)
   await mongo.set('datacronList', { _id: cron.id }, cron)
 }
+
 module.exports = async(gameVerion, localeVersion, assetVersion)=>{
   let [ abilityList, unitList, factionList, targetSetList, enums, lang, datacronTemplateList, datacronSetList, datacronAffixTemplateSetList ] = await Promise.all([
     getFile('ability', gameVerion),
@@ -116,7 +117,7 @@ module.exports = async(gameVerion, localeVersion, assetVersion)=>{
     getFile('datacronSet', gameVerion),
     getFile('datacronAffixTemplateSet', gameVerion)
   ])
-  if(!abilityList || !unitList || !factionList || !targetSetList || !enums || !lang || !datacronTemplateList || !datacronSetList || !datacronAffixTemplateSetList) return
+  if(!abilityList || !unitList || !factionList || !targetSetList || !enums || !lang || !datacronTemplateList || !datacronSetList || !datacronAffixTemplateSetList ) return
 
   let stats, factions, units, ability
   if(factionList?.length > 0 && lang) factions = mapFaction(factionList, lang)
@@ -136,6 +137,7 @@ module.exports = async(gameVerion, localeVersion, assetVersion)=>{
     array.push(mapCron(datacronTemplateList[i], cronSet, dataList, images))
   }
   await Promise.all(array)
+
   await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.datacron-set': 'datacron-set' })
   if(images?.length > 0 && assetVersion) checkImages(images, assetVersion, 'asset', 'datacronList')
   return true

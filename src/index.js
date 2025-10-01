@@ -105,7 +105,7 @@ const startSync = async()=>{
       }
       if(!updateNeeded){
         let mapDataVersions = await mongo.find('versions', {}, { _id: 1, gameVersion: 1, localeVersion: 1 })
-        if(mapDataVersions && mapDataVersions?.length !== 20) updateNeeded = true
+        if(mapDataVersions && mapDataVersions?.length !== 21) updateNeeded = true
         if(mapDataVersions?.length > 0) mapDataVersions = mapDataVersions.filter(x=>x.gameVersion !== obj?.latestGamedataVersion || x.localeVersion !== obj?.latestLocalizationBundleVersion)
         if(mapDataVersions?.length > 0) updateNeeded = true
       }
