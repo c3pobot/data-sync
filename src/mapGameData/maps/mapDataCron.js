@@ -95,6 +95,7 @@ const mapCron = async(cron = {}, cronSet = {}, dataList = {}, images = [])=>{
   cron.stat = {}
   cron.ability = {}
   cron.setTier = cronSet.tier
+  cron.setFocusedTier = cronSet.focusedTier
   cron.setMaterial = cronSet.setMaterial
   cron.nameKey = dataList.lang[cronSet.displayName]
   cron.expirationTimeMs = +cronSet.expirationTimeMs
