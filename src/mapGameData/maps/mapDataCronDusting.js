@@ -30,6 +30,7 @@ const mapDataCronTier = async( tier = [], recipeList = [], materialList = [], la
 const mapDustRecipe = async(datacronSet, recipeList = [], materialList = [], lang = {}, materialSet, images = [])=>{
   if(datacronSet?.tier?.length > 0) await mapDataCronTier(datacronSet.tier, recipeList, materialList, lang, materialSet, images)
   if(datacronSet?.focusedTier?.length > 0) await mapDataCronTier(datacronSet.focusedTier, recipeList, materialList, lang, materialSet, images)
+  if(datacronSet?.setMaterial?.length > 0) await mapDataCronTier(datacronSet.setMaterial, recipeList, materialList, lang, materialSet, images)
 }
 module.exports = async(gameVerion, localeVersion, assetVersion)=>{
   let [ datacronSetList, recipeList, materialList, lang ] = await Promise.all([
