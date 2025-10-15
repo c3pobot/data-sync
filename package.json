@@ -31,6 +31,7 @@
     "node-fetch": "^2.6.7",
     "rabbitmq-client": "^5.0.2",
     "shelljs": "^0.8.5",
+    "statcalc": "github:c3pobot/statcalc",
     "uuid": "^8.3.2"
   }
 }
