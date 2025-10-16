@@ -102,5 +102,5 @@ module.exports = async(gameVersion, localeVersion, assetVersion)=>{
     checkImages(images, assetVersion, 'thumbnail', 'unitList-thumbnail')
     checkImages(images, assetVersion, 'portrait', 'unitList-portrait')
   }
-  return true
+  //return true
 }
