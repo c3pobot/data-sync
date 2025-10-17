@@ -16,7 +16,7 @@ const getIngredients = (ingredients = [], lang = {}, materialList = [])=>{
   while(i--){
     if(ingredients[i].id == 'GRIND') continue
     let mat = materialList.find(x=>x.id === ingredients[i].id)
-    let tempObj = { id: ingredients[i].id, qty: ingredients[i].minQuantity, nameKey: lang[mat?.nameKey] || mat?.nameKey, iconKey: mat?.iconKey }
+    let tempObj = { id: ingredients[i].id, qty: ingredients[i].minQuantity, nameKey: lang[mat?.nameKey] || mat?.nameKey, iconKey: mat?.iconKey, tier: mat.tier, rarity: mat.rarity }
     res.push(tempObj)
   }
   return res
