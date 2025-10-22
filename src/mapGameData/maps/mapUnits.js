@@ -96,11 +96,11 @@ module.exports = async(gameVersion, localeVersion, assetVersion)=>{
   if(hiddenAutoComplete?.length > 0) await mongo.set('autoComplete', { _id: 'hidden-faction' }, { include: true, data: hiddenAutoComplete })
   //if(factionArray?.length > 0) await mongo.set('autoComplete', { _id: 'faction' }, { include: true, data: factionAutoComplete })
 
-  await mongo.set('autoComplete', {_id: 'nameKeys'}, { include: false, 'data.unit': 'unit', 'data.leader': 'unit', 'data.unit1': 'unit', 'data.unit2': 'unit', 'data.unit3': 'unit', 'data.unit4': 'unit', 'data.faction': 'faction' })
+  await mongo.set('autoComplete', {_id: 'nameKeys'}, { include: false, 'data.unit': 'unit', 'data.leader': 'unit', 'data.unit1': 'unit', 'data.unit2': 'unit', 'data.unit3': 'unit', 'data.unit4': 'unit', 'data.exclude-attack-lead': 'unit', 'data.faction': 'faction' })
 
   if(images?.length){
     checkImages(images, assetVersion, 'thumbnail', 'unitList-thumbnail')
     checkImages(images, assetVersion, 'portrait', 'unitList-portrait')
   }
-  //return true
+  return true
 }
