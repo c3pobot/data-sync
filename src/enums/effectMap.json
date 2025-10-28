@@ -35,5 +35,6 @@
   "special_breach_debuff": "BattleEffect_Breach",
   "undispellable_taunt": "BattleEffect_Taunt",
   "armorshred_effect": "ARMORSHRED_DEBUFF_V2",
-  "bonus_turn": "BattleEffect_BonusTurn"
+  "bonus_turn": "BattleEffect_BonusTurn",
+  "profit_buff": "BattleEffect_Profit"
 }

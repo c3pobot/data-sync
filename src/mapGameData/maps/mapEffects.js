@@ -123,9 +123,11 @@ const checkEffect = (id, dataList)=>{
 }
 const checkTags = (effect, dataList)=>{
   let tags = []
-  if(effect.descriptiveTag?.filter(x=>x.tag.startsWith('countable_') || x.tag.startsWith('armorshred_') || x.tag.startsWith('bonus_turn')).length == 0) return tags
+  if(effect.descriptiveTag?.filter(x=>x.tag.startsWith('countable_') || x.tag.startsWith('armorshred_') || x.tag.startsWith('bonus_turn') || x.tag.startsWith('profit_buff')).length == 0) return tags
   for(let i in effect.descriptiveTag){
+
     let tempTag = checkTag(effect.descriptiveTag[i].tag, effect, dataList)
+
     if(tempTag) tags.push(tempTag)
   }
   return tags
@@ -191,12 +193,12 @@ module.exports = async(gameVersion, localeVersion)=>{
       if(tempName[0]) nameKey = tempName[0].trim()
       if(tempName[1]) descKey = tempName[1].trim()
     }
-
     if(!nameKey) continue
     if(!effects[nameKey]) effects[nameKey] = { id: i.trim(), nameKey: nameKey, descKey: descKey, locKeys: {}, tags: {}, units: {} }
     effects[nameKey].locKeys[i.trim()] = i.trim()
   }
   effects['Bonus Turn'] = { id: 'BattleEffect_BonusTurn', nameKey: 'Bonus Turn', descKey: 'Bonus Turn', tags: {}, units: {}, locKeys: { BattleEffect_BonusTurn: 'BattleEffect_BonusTurn'} }
+  //effects['Profit'] = { id: 'BattleEffect_Profit', nameKey: 'Profit', descKey: 'Bonus Turn', tags: {}, units: {}, locKeys: { BattleEffect_Profit: 'BattleEffect_Profit'} }
   let array = [], dataList = { langArray: langArray, lang: lang, effectList: effectList, abilityList: abilityList, skillList: skillList }
   for(let i in units) await checkUnit(units[i], dataList, effects)
   /*
