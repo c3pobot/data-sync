@@ -14,8 +14,8 @@ module.exports = async(journey = {})=>{
       unit.rarity = 4
       unit.gear = { nameKey: `R${units[i].relic}`, name: 'relic', value: units[i].relic + 2 }
       if(units[i].relic >= 3) unit.rarity = 5
-      if(units[i].relic >= 4) unit.rarity = 6
-      if(units[i].relic >= 5) unit.rarity = 7
+      if(units[i].relic >= 4) unit.rarity = 5
+      if(units[i].relic >= 5) unit.rarity = 6
     }
     if(units[i].tier >= 0) unit.gear = { nameKey: `G${units[i].tier}`, name: 'gear', value: units[i].tier }
     guide.units.push(unit)
