@@ -8,6 +8,9 @@ module.exports = async(gameVersion, localeVersion)=>{
   for(let i in obj){
     array.push({ name: obj[i].nameKey, value: obj[i].id })
   }
-  if(array?.length > 0) await mongo.set('autoComplete', { _id: 'bundle' }, { data: array, include: true, gameVersion: gameVersion, localeVersion: localeVersion })
+  if(array?.length > 0){
+    await mongo.set('autoComplete', { _id: 'bundle' }, { data: array, include: true, gameVersion: gameVersion, localeVersion: localeVersion })
+    await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.bundle': 'bundle' })
+  }
   return true
 }
