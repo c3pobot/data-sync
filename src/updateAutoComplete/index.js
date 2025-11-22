@@ -13,8 +13,8 @@ const checkData = async(gameVersion, localeVersion, force = false)=>{
   let missing = []
   let data = await mongo.find('autoComplete', {}, { _id: 1, gameVersion: 1, localeVersion: 1})
   for(let i in maps){
-    missing.push(i)
-    continue
+    //missing.push(i)
+    //continue
     let status = checkVersions(gameVersion, localeVersion, data.find(x=>x._id === i))
     if(force || !status){
       missing.push(i)
