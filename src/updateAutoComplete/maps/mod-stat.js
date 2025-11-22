@@ -36,6 +36,7 @@ module.exports = async(gameVersion, localeVersion, gameConfig = [])=>{
   }
   if(autoComplete.length > 0){
     await mongo.set('autoComplete', { _id: 'mod-stat' }, { include: true, data: autoComplete, gameVersion: gameVersion, localeVersion: localeVersion })
+    await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.mod-stat': 'mod-stat' })
     return true
   }
 }

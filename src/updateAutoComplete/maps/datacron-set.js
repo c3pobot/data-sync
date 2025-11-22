@@ -11,6 +11,7 @@ module.exports = async(gameVersion, localeVersion)=>{
   let autoComplete = Object.values(data)
   if(autoComplete.length >= 0){
     await mongo.set('autoComplete', { _id: 'datacron-set' }, { data: autoComplete, include: true, gameVersion: gameVersion, localeVersion: localeVersion })
+    await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.datacron-set': 'datacron-set' })
     return true
   }
 }

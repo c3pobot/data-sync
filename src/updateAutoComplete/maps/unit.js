@@ -7,6 +7,7 @@ module.exports = async(gameVersion, localeVersion)=>{
   })
   if(autoComplete?.length > 0){
     await mongo.set('autoComplete', { _id: 'unit' }, { include: true, data: autoComplete, gameVersion: gameVersion, localeVersion: localeVersion })
+    await mongo.set('autoComplete', {_id: 'nameKeys'}, { include: false, 'data.unit': 'unit', 'data.leader': 'unit', 'data.unit1': 'unit', 'data.unit2': 'unit', 'data.unit3': 'unit', 'data.unit4': 'unit', 'data.exclude-attack-unit': 'unit' })
     return true
   }
 }

@@ -11,6 +11,7 @@ module.exports = async(gameVersion, localeVersion)=>{
   }
   if(autoComplete.length > 0){
     await mongo.set('autoComplete', { _id: 'effect' }, { include: true, data: autoComplete, gameVersion: gameVersion, localeVersion: localeVersion })
+    await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.effect': 'effect' })
     return true
   }
 }
