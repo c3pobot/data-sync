@@ -18,6 +18,7 @@ module.exports = async()=>{
     }
     if(guestAccount.uId && !guestAccount.auth){
       let tempIdentity = (await mongo.find('identity', {_id: guestAccount.uId}))[0]
+      //let tempIdentity
       if(tempIdentity){
         guestAccount.auth = tempIdentity.auth
       }else{

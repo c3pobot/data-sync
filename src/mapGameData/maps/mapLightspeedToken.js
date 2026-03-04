@@ -9,19 +9,26 @@ const mapLightspeedToken = async( token = {}, lang = {})=>{
   if(!token?.applicableUnitDefs || token?.applicableUnitDefs?.length == 0) return
   if(!lang[token.nameKey] || !lang[token.descriptionKey]) return
 
-  let nameKey = `${lang[token.descriptionKey]} ${lang[token.nameKey]}`
-  await mongo.set('lightspeedToken', { _id: token.id }, { id: token.id, units: token.applicableUnitDefs, nameKey: formatNameKey(nameKey), level: token?.unitUpgrade?.level, rarity: token?.unitUpgrade?.rarity, gear: token?.unitUpgrade?.tier, relicTier: token?.unitUpgrade?.relicTier, combatType: token.combatType })
+  let nameKey = formatNameKey(`${lang[token.descriptionKey]} ${lang[token.nameKey]}`)
+
+  await mongo.set('lightspeedToken', { _id: token.id }, { id: token.id, units: token.applicableUnitDefs, nameKey: nameKey, level: token?.unitUpgrade?.level, rarity: token?.unitUpgrade?.rarity, gear: token?.unitUpgrade?.tier, relicTier: token?.unitUpgrade?.relicTier, combatType: token.combatType })
+  for(let i in token.applicableUnitDefs){
+    if(!token.applicableUnitDefs[i]) continue
+    let tempUnit = (await mongo.find('unitLightspeedToken', { _id: token.applicableUnitDefs[i] }, { _id: 0, TTL: 0 }))[0]
+    if(!tempUnit?.tokens) tempUnit = { baseId: token.applicableUnitDefs[i], tokens: {} }
+    tempUnit.tokens[token.id] = { baseId: token.applicableUnitDefs[i], tokenId: token.id, tokenNameKey: nameKey, level: token?.unitUpgrade?.level, rarity: token?.unitUpgrade?.rarity, gear: token?.unitUpgrade?.tier, relicTier: token?.unitUpgrade?.relicTier, combatType: token.combatType }
+    if(token.applicableUnitDefs[i]) await mongo.set('unitLightspeedToken', { _id:  token.applicableUnitDefs[i] }, tempUnit)
+  }
 }
 module.exports = async( gameVersion, localeVersion )=>{
-  let [ lightspeedTokenList, lang, skillList, unitList ] = await Promise.all([
+  //return true
+  let [ lightspeedTokenList, lang ] = await Promise.all([
     getFile('lightspeedToken', gameVersion),
     getFile('Loc_ENG_US.txt', localeVersion)
   ])
   if(!lightspeedTokenList || !lang) return
 
-  let i = lightspeedTokenList?.length, array = []
-  while(i--) array.push(mapLightspeedToken(lightspeedTokenList[i], lang))
-  await Promise.all(array)
+  for(let i in lightspeedTokenList) await mapLightspeedToken(lightspeedTokenList[i], lang)
   await mongo.set('autoComplete', { _id: 'nameKeys' }, { include: false, 'data.token': 'token' })
   return true
 }
