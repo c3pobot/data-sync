@@ -1,5 +1,6 @@
 'use strict'
 const Cmds = {}
+
 Cmds.recipe = require('./mapRecipe')
 Cmds.playerPortrait = require('./mapPlayerPortrait')
 Cmds.playerTitle = require('./mapPlayerTitle')
@@ -19,6 +20,7 @@ Cmds.campaign = require('./mapCampain')
 Cmds.cqFeats = require('./mapConquestChallenge')
 Cmds.cqDef = require('./mapConquestDef')
 Cmds.dataDisc = require('./mapDataDisc')
+Cmds.questFaction = require('./mapQuestFactions')
 Cmds.equipment = require('./mapEquipment')
 Cmds.modsDef = require('./mapModDef')
 Cmds.scavengerGear = require('./mapScavengerDef')
