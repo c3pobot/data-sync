@@ -53,8 +53,8 @@ module.exports = ( units = [], campaignList = [], lang = {}) =>{
     for(let b in battles){
       if(!battles[b].count) continue
       let battle = { nameKey: battles[b].nameKey, count: battles[b].count, nodes: '', hard: battles[b].hard, normal: battles[b].normal, units: battles[b].units }
-      if(battle?.normal?.length > 0) battle.nodes += `\nNormal ${battle.normal?.join(', ')}`
-      if(battle?.hard?.length > 0) battle.nodes += `\nHard ${battle.hard?.join(', ')}`
+      if(battle?.normal?.length > 0) battle.nodes += `Normal ${battle.normal?.join(', ')}\\n`
+      if(battle?.hard?.length > 0) battle.nodes += `Hard ${battle.hard?.join(', ')}\\n`
       data.push(battle)
     }
   }

@@ -51,7 +51,7 @@ module.exports = (units = [], campaignMap = [], unitGuideList = [], unitMap = {}
     for(let b in battles){
       if(!battles[b].count) continue
       let battle = { nameKey: `${campaignMap[i].id} ${battles[b].nameKey}`, count: battles[b].count, nodes: '', tiers: battles[b].tiers, units: battles[b].units }
-      if(battle?.tiers?.length > 0) battle.nodes += `\nTier(s) ${battle.tiers?.join(', ')}`
+      if(battle?.tiers?.length > 0) battle.nodes += `Tier(s) ${battle.tiers?.join(', ')}\\n`
       data.push(battle)
     }
   }
