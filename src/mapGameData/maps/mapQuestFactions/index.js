@@ -43,13 +43,17 @@ module.exports = async(gameVersion, localeVersion)=>{
   let unitMap = mapUnits(unitList?.filter(x=>x.rarity == 7 && x.obtainable == true && x.obtainableTime == 0), lang)
   if(!unitMap) return
 
+
   for(let i in categoryList){
+    let data = []
     if(categoryList[i].id?.startsWith('selftag_') || categoryList[i].id?.startsWith('any_obtainable') || categoryList[i].id?.startsWith('special') || categoryList[i].descKey?.startsWith('PLACEHOLDER')) continue
     let units = getUnits(pveList, categoryList[i].id, lang)
     if(!units || units?.length == 0) continue
     let campaigns = mapCampains(units, campaignList, lang)
+    if(campaigns?.length > 0) data = data.concat(campaigns)
     let guideEvents = mapEvents(units, campaignMapList, unitGuideList, unitMap)
-    await mongo.set('questFactionList', { _id: categoryList[i].id }, { ...guideEvents, ...campaigns })
+    if(guideEvents?.length > 0) data = data.concat(guideEvents)
+    if(data?.length > 0) await mongo.set('questFactionList', { _id: categoryList[i].id }, { data: sorter([{ column: 'count', order: 'descending' }], data) })
   }
   return true
 }

@@ -1,5 +1,4 @@
 'use strict'
-const sorter = require('json-array-sorter')
 const eventTypeSet = new Set(['JOURNEY', 'LEGENDARY', 'EPIC', 'GALACTIC', 'MODS'])
 
 const combineBattles = (battles = [])=>{
@@ -10,7 +9,7 @@ const combineBattles = (battles = [])=>{
     if(!data[key]) data[key] = { units: battles[i].units, count: battles[i].count, tiers: [], nameKey: battles[i].unitNameKey }
     if(data[key]?.tiers) data[key].tiers.push(battles[i].eventTier)
   }
-  return sorter([{column: 'count', order: 'descending'}], Object.values(data || {}))
+  return Object.values(data)
 }
 
 const checkCampaignNodeDifficultyGroup = (units = [], campaignInfo = {}, campaignNodeDifficultyGroup = [], unitMap = {}, unitGuideList = [])=>{
@@ -43,12 +42,18 @@ const checkEnemyUnitPreview = (units = [], battles = {}, campaignInfo = {}, enem
   }
 }
 module.exports = (units = [], campaignMap = [], unitGuideList = [], unitMap = {})=>{
-  let data = {}
+  let data = []
   for(let i in campaignMap){
     if(!eventTypeSet.has(campaignMap[i].id)) continue
     let battles = checkCampaignNodeDifficultyGroup(units, { campaignId: campaignMap[i].id, mapId: campaignMap[i].id }, campaignMap[i].campaignNodeDifficultyGroup, unitMap, unitGuideList)
     if(battles?.length == 0) continue
-    if(battles?.length > 0) data[campaignMap[i].id] = battles
+
+    for(let b in battles){
+      if(!battles[b].count) continue
+      let battle = { nameKey: `${campaignMap[i].id} ${battles[b].nameKey}`, count: battles[b].count, nodes: '', tiers: battles[b].tiers, units: battles[b].units }
+      if(battle?.tiers?.length > 0) battle.nodes += `\nTier(s) ${battle.tiers?.join(', ')}`
+      data.push(battle)
+    }
   }
   return data
 }

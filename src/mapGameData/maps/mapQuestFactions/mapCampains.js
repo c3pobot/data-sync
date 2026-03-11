@@ -1,5 +1,4 @@
 'use strict'
-const sorter = require('json-array-sorter')
 const nodeTypeSet = new Set([5,6,7,8,9])
 
 const combineBattles = (battles = [])=>{
@@ -10,7 +9,7 @@ const combineBattles = (battles = [])=>{
     if(!data[key]) data[key] = { key: key, units: battles[i].units, count: battles[i].count, hard: [], normal: [], nameKey: battles[i].nameKey, type: battles[i].type }
     if(data[key][battles[i].type]) data[key][battles[i].type].push(battles[i].missionNameKey)
   }
-  return sorter([{column: 'count', order: 'descending'}], Object.values(data || {}))
+  return Object.values(data)
 }
 const checkCampaignMap = (units = [], campaignInfo = {}, campaignMap = [], lang = {})=>{
   let battles = {}
@@ -42,15 +41,22 @@ const checkEnemyUnitPreview = (units = [], battles = {}, campaignInfo = {}, enem
   }
 }
 module.exports = ( units = [], campaignList = [], lang = {}) =>{
-  let data = {}
+  let data = []
   for(let i in campaignList){
     if(!nodeTypeSet.has(campaignList[i].campaignType)) continue
     let nameKey = lang[campaignList[i].nameKey]?.replace(/\\n/g, ' ')
     if(!nameKey) continue
 
     let battles = checkCampaignMap(units, { campaignId: campaignList[i].id, nameKey: nameKey }, campaignList[i].campaignMap, lang )
-    if(battles?.length == 0) continue
-    if(battles?.length > 0) data[nameKey] = battles
+    if(!battles || battles?.length == 0) continue
+
+    for(let b in battles){
+      if(!battles[b].count) continue
+      let battle = { nameKey: battles[b].nameKey, count: battles[b].count, nodes: '', hard: battles[b].hard, normal: battles[b].normal, units: battles[b].units }
+      if(battle?.normal?.length > 0) battle.nodes += `\nNormal ${battle.normal?.join(', ')}`
+      if(battle?.hard?.length > 0) battle.nodes += `\nHard ${battle.hard?.join(', ')}`
+      data.push(battle)
+    }
   }
   return data
 }
