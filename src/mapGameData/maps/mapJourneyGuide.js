@@ -109,7 +109,7 @@ const mapTask = (task = {}, dataList = {}, tempEvent = {})=>{
   let baseId = task.actionLinkDef.link.replace('UNIT_DETAILS?', '').replace('unit_meta=BASE_ID', '').replace('&','').replace('base_id=', '')
   if(!baseId) return
   let unitRarity = Object.values(tempEvent?.tier || {})?.reduce((acc, t)=>{
-    if(Object.values(t.unit)?.length > 0 && t.rarity > acc){
+    if(Object.values(t.unit)?.length > 0 && t.rarity > acc && t.rarity < 8){
       return t.rarity
     }else{
       return acc

@@ -8,15 +8,10 @@ module.exports = async(journey = {})=>{
   if(!units || units?.length == 0) return
 
   let guide = { name: journey.unitNameKey, descKey: journey?.nameKey, id: journey.baseId, units: [], factions: [], groups: [] }
-  let unitRarity = Object.values(journey?.tier || {})?.reduce((acc, t)=>{
-    if(Object.values(t.unit)?.length > 0 && t.rarity > acc){
-      return t.rarity
-    }else{
-      return acc
-    }
-  }, 0)
+
   for(let i in units){
-    let unit = { baseId: units[i].baseId, combatType: units[i].combatType, nameKey: units[i].nameKey, thumbnailName: units[i].thumbnailName, rarity: units[i].rarity || unitRarity }
+    let unitRarity = units[i].rarity || journey?.requirement?.rarity
+    let unit = { baseId: units[i].baseId, combatType: units[i].combatType, nameKey: units[i].nameKey, thumbnailName: units[i].thumbnailName, rarity: unitRarity || 0 }
 
     if(units[i].relic >= 1){
       unit.gear = { nameKey: `R${units[i].relic}`, name: 'relic', value: units[i].relic + 2 }
@@ -25,7 +20,7 @@ module.exports = async(journey = {})=>{
       if(units[i].relic >= 3) tempRarity = 5
       if(units[i].relic >= 5) tempRarity = 6
       if(units[i].relic >= 6) tempRarity = 7
-      
+
       if(tempRarity > unit.rarity) unit.rarity = tempRarity
     }
     if(units[i].tier >= 0) unit.gear = { nameKey: `G${units[i].tier}`, name: 'gear', value: units[i].tier }
