@@ -63,6 +63,7 @@ const mapCampaign = (campaign = [], units = {}, factions = {}, lang = {})=>{
               res[map.id][c.id].node[m.id][type][tempUnit.baseId].required = true
             }
           }
+          /*
           for(let i in m?.entryCategoryAllowed?.categoryId){
             let baseId = m.entryCategoryAllowed.categoryId[i], tempUnit, tempFaction, type = 'unit'
             if(baseId && units[baseId]) tempUnit = JSON.parse(JSON.stringify(units[baseId]))
@@ -79,6 +80,7 @@ const mapCampaign = (campaign = [], units = {}, factions = {}, lang = {})=>{
               }
             }
           }
+          */
           for(let i in m?.entryCategoryAllowed?.commanderCategoryId){
             let baseId = m.entryCategoryAllowed.categoryId[i], tempUnit, tempFaction, type = 'unit'
             if(baseId && units[baseId]) tempUnit = JSON.parse(JSON.stringify(units[baseId]))
@@ -106,7 +108,14 @@ const mapTask = (task = {}, dataList = {}, tempEvent = {})=>{
   let tier = task.descKey.split('_')
   let baseId = task.actionLinkDef.link.replace('UNIT_DETAILS?', '').replace('unit_meta=BASE_ID', '').replace('&','').replace('base_id=', '')
   if(!baseId) return
-  if(!tempEvent.requirement.unit) tempEvent.requirement = { unit: {}, faction: {}, unitCount: 0, rarity: 0, gp: 0, tier: 0, relic: 0 }
+  let unitRarity = Object.values(tempEvent?.tier || {})?.reduce((acc, t)=>{
+    if(Object.values(t.unit)?.length > 0 && t.rarity > acc){
+      return t.rarity
+    }else{
+      return acc
+    }
+  }, 0)
+  if(!tempEvent.requirement.unit) tempEvent.requirement = { unit: {}, faction: {}, unitCount: 0, rarity: unitRarity || 0, gp: 0, tier: 0, relic: 0 }
   tempEvent.requirement.unit[baseId] = JSON.parse(JSON.stringify(dataList.units[baseId]))
   tempEvent.requirement.unit[baseId].required = true
   if(task.descKey?.toUpperCase().includes('RELIC')) tempEvent.requirement.unit[baseId].relic = +tier[(tier.length - 1)]
@@ -135,14 +144,14 @@ const mapGuide = async(guideDef = {}, dataList = {}, autoComplete = [], rewardUn
     requirement: {},
     tier: {}
   }
-
-  if(requirements?.requirementItem?.length > 0){
-    for(let i in requirements.requirementItem) mapRequirementItem(requirements.requirementItem[i], dataList, tempEvent)
-  }
-  if(Object.values(tempEvent.requirement)?.length === 0 && dataList.campaign[tempEvent.campaignMapId] && dataList.campaign[tempEvent.campaignMapId][tempEvent.campaignNodeId]){
+  if(dataList.campaign[tempEvent.campaignMapId] && dataList.campaign[tempEvent.campaignMapId][tempEvent.campaignNodeId]){
     let tempCampaign = dataList.campaign[tempEvent.campaignMapId][tempEvent.campaignNodeId]
     for(let n in tempCampaign?.node) tempEvent.tier[n] = JSON.parse(JSON.stringify(tempCampaign?.node[n]))
   }
+  if(requirements?.requirementItem?.length > 0){
+    for(let i in requirements.requirementItem) mapRequirementItem(requirements.requirementItem[i], dataList, tempEvent)
+  }
+
   if(Object.values(tempEvent.requirement)?.length > 0 || Object.values(tempEvent.tier)?.length > 0){
     autoComplete.push({name: tempEvent.unitNameKey || tempEvent.nameKey, value: tempEvent.baseId, descKey: tempEvent.nameKey })
     await mongo.set('journeyGuide', { _id: tempEvent.baseId }, tempEvent)
