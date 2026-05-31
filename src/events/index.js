@@ -6,37 +6,37 @@ const AuthGuest = require('./authGuest')
 const updateGameEvents = require('./updateGameEvents')
 const swgohClient = require(`src/swgohClient`)
 const { guestAccount } = require('./guestAccount')
-
+const getIdentity = require('./get_identity')
+const reAuthCodes = {
+  4: 'SESSIONEXPIRED',
+  5: 'AUTHFAILED',
+  9: 'INVALID_DATA',
+  11: 'UNAUTHORIZED',
+  51: 'FORCECLIENTRESTART',
+  55: 'PRIORITYFORCECLIENTRESTART',
+  32: 'RECORDNOTFOUND'
+}
+async function getEvents(){
+  try{
+    let pObj = await swgohClient('getInitialData', {}, guestAccount?.identity)
+    if(pObj?.code && reAuthCodes[pObj.code]){
+      let newAuth = await getIdentity(guestAccount.allyCode, true)
+      if(!newAuth?.auth) return
+      guestAccount.identity = newAuth
+      pObj = await swgohClient('getInitialData', {}, guestAccount?.identity)
+    }
+    return pObj?.gameEvent
+  }catch(e){
+    log.error(e)
+  }
+}
 module.exports = async()=>{
   try{
-    let pObj
     await CheckIdentity()
-    if(guestAccount?.uId && guestAccount?.auth?.authId && guestAccount?.auth?.authToken){
-      pObj = await swgohClient('getInitialData', {}, {
-        androidId: guestAccount.uId,
-        deviceId: guestAccount.uId,
-        platform: 'Android',
-        auth: guestAccount.auth
-      })
-      if(!pObj?.gameEvent){
-        let newTempAuth = await AuthGuest(guestAccount.uId)
-        if(newTempAuth?.authId && newTempAuth?.authToken){
-          guestAccount.auth = newTempAuth
-          pObj = await swgohClient('getInitialData', {}, {
-            androidId: guestAccount.uId,
-            deviceId: guestAccount.uId,
-            platform: 'Android',
-            auth: guestAccount.auth
-          })
-        }
-      }
-    }
-    if(pObj?.gameEvent){
-      await mongo.set('tempCache', {_id: 'gacEvent'}, { data: pObj.gameEvent.filter(x=>x.type === 10) })
-      await updateGameEvents(pObj.gameEvent)
-    }else{
-      log.error('Error with Guest getInitialData for events update ...')
-    }
+    let gameEvents = await getEvents()
+    if(!gameEvents || gameEvents?.length == 0) return log.error('Error with Guest getInitialData for events update ...')
+    await updateGameEvents(gameEvents)
+
   }catch(e){
     throw(e)
   }

@@ -1,6 +1,4 @@
 'use strict'
-let guestAccount = {
-  uId: null,
-  auth: null
-}
+let guestAccount = { allyCode: null, identity: null }
+
 module.exports = { guestAccount }

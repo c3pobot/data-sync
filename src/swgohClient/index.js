@@ -3,11 +3,24 @@ const log = require('logger')
 const fetch = require('./fetch')
 const GAME_CLIENT_URL = process.env.OAUTH_GAME_CLIENT_URL || process.env.GAME_CLIENT_URL
 let retryCount = +process.env.CLIENT_RETRY_COUNT || 6
+const reAuthCodes = {
+  4: 'SESSIONEXPIRED',
+  5: 'AUTHFAILED',
+  9: 'INVALID_DATA',
+  11: 'UNAUTHORIZED',
+  51: 'FORCECLIENTRESTART',
+  55: 'PRIORITYFORCECLIENTRESTART',
+  32: 'RECORDNOTFOUND'
+}
 const GETRoutes = {'enums': 'enums'}
 
 const requestWithRetry = async(uri, opts = {}, count = 0)=>{
   try{
     let res = await fetch(uri, opts)
+    if(res?.body?.code && reAuthCodes[res.body.code]){
+      res.body.reAuth = true
+      return res
+    }
     if(res?.error === 'FetchError' || res?.body?.code === 6 || (res?.status === 400 && res?.body?.message && res?.body?.code !== 4)){
       if(count < retryCount){
         count++
