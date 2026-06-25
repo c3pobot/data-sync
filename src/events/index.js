@@ -2,7 +2,6 @@
 const log = require('logger')
 const mongo = require('mongoclient')
 const CheckIdentity = require('./checkIdentity')
-const AuthGuest = require('./authGuest')
 const updateGameEvents = require('./updateGameEvents')
 const swgohClient = require(`src/swgohClient`)
 const { guestAccount } = require('./guestAccount')
@@ -19,6 +18,7 @@ const reAuthCodes = {
 async function getEvents(){
   try{
     let pObj = await swgohClient('getInitialData', {}, guestAccount?.identity)
+    if(pObj?.code) console.log(pObj)
     if(pObj?.code && reAuthCodes[pObj.code]){
       let newAuth = await getIdentity(guestAccount.allyCode, true)
       if(!newAuth?.auth) return

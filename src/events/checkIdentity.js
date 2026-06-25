@@ -1,7 +1,6 @@
 'use strict'
 const mongo = require('mongoclient')
 const { v4: uuidv4 } = require('uuid')
-const AuthGuest = require('./authGuest')
 const { guestAccount } = require('./guestAccount')
 const getIdentity = require('./get_identity')
 
