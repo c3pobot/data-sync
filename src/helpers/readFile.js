@@ -4,7 +4,7 @@ const fs = require('fs')
 const zlib = require('node:zlib')
 
 const DATA_DIR = process.env.DATA_DIR || '/app/data/files'
-const compressedSet = new Set([ 'units', 'campain', 'effect', 'Loc_ENG_US.txt', 'Loc_Key_Mapping.txt' ])
+const compressedSet = new Set([ 'units', 'campaign', 'effect', 'Loc_ENG_US.txt', 'Loc_Key_Mapping.txt', 'units_pve' ])
 
 function decompressData(compressedData){
   let decompressedBuffer = zlib.brotliDecompressSync(compressedData);

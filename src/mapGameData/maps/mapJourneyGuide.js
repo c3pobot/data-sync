@@ -3,6 +3,21 @@ const mongo = require('mongoclient')
 const getFile = require('src/helpers/getFile')
 const mapGuideTemplates = require('./mapGuideTemplates')
 
+const getTBAUnit = (requirementList, challengeList, lang) => {
+  let requirement = requirementList?.requirementItem?.find(x=>x?.id?.startsWith('GL'))
+  if(!requirement?.id) return
+
+  let challenge = challengeList?.find(x=>x.id == requirement.id)
+  if(!challenge?.nameKey) return;
+  let nameKey = lang[challenge.nameKey]
+  if(!nameKey) return
+
+  nameKey = nameKey.replace(/^Galactic Legend\s+/i, 'GL ')
+    .replace(/\s*\(\d+\s+of\s+\d+\)\s*$/i, '')
+    .trim();
+  return { baseId: nameKey.toLowerCase().replace(/\s+/g, '_'), nameKey }
+    
+}
 
 const mapFaction = (faction = [], lang = {})=>{
   let res = {}
@@ -118,9 +133,10 @@ const mapTask = (task = {}, dataList = {}, tempEvent = {})=>{
   if(!tempEvent.requirement.unit) tempEvent.requirement = { unit: {}, faction: {}, unitCount: 0, rarity: unitRarity || 0, gp: 0, tier: 0, relic: 0 }
   tempEvent.requirement.unit[baseId] = JSON.parse(JSON.stringify(dataList.units[baseId]))
   tempEvent.requirement.unit[baseId].required = true
-  if(task.descKey?.toUpperCase().includes('RELIC')) tempEvent.requirement.unit[baseId].relic = +tier[(tier.length - 1)]
+  if(task.descKey?.toUpperCase().includes('RELIC') && !task.descKey?.toUpperCase().includes('ERA_LEVEL')) tempEvent.requirement.unit[baseId].relic = +tier[(tier.length - 1)]
   if(task.descKey?.toUpperCase().includes('STAR')) tempEvent.requirement.unit[baseId].rarity = +tier[(tier.length - 1)]
   if(task.descKey?.toUpperCase().includes('GEAR')) tempEvent.requirement.unit[baseId].tier = +tier[(tier.length - 1)]
+  if(task.descKey?.toUpperCase().includes('ERA_LEVEL')) tempEvent.requirement.unit[baseId].era_level = +tier[(tier.length - 1)]
 }
 const mapRequirementItem = (requirementItem = {}, dataList = {}, tempEvent = {})=>{
   let requirement = dataList.challengeList.find(x=>x.id === requirementItem.id)
@@ -144,6 +160,13 @@ const mapGuide = async(guideDef = {}, dataList = {}, autoComplete = [], rewardUn
     requirement: {},
     tier: {}
   }
+  if(tempEvent.baseId == 'TBA' && !tempEvent.unitNameKey){
+    let tbaUnit = getTBAUnit(requirements, dataList.challengeList, dataList.lang)
+    if(tbaUnit?.baseId && tbaUnit?.nameKey){
+      tempEvent.baseId = tbaUnit.baseId
+      tempEvent.unitNameKey = tbaUnit.nameKey
+    }
+  }
   if(dataList.campaign[tempEvent.campaignMapId] && dataList.campaign[tempEvent.campaignMapId][tempEvent.campaignNodeId]){
     let tempCampaign = dataList.campaign[tempEvent.campaignMapId][tempEvent.campaignNodeId]
     for(let n in tempCampaign?.node) tempEvent.tier[n] = JSON.parse(JSON.stringify(tempCampaign?.node[n]))
@@ -151,12 +174,19 @@ const mapGuide = async(guideDef = {}, dataList = {}, autoComplete = [], rewardUn
   if(requirements?.requirementItem?.length > 0){
     for(let i in requirements.requirementItem) mapRequirementItem(requirements.requirementItem[i], dataList, tempEvent)
   }
-
+  let tempGuides = await mongo.find('journeyGuide', { requirementId: tempEvent.requirementId })
+  if(tempGuides?.length > 0){
+    for(let i of tempGuides){
+      if(i?._id) await mongo.del('journeyGuide', { _id: i._id })
+      if(i?.baseId) await mongo.del('guideTemplates', { _id: i.baseId })
+    }
+  }
   if(Object.values(tempEvent.requirement)?.length > 0 || Object.values(tempEvent.tier)?.length > 0){
     autoComplete.push({name: tempEvent.unitNameKey || tempEvent.nameKey, value: tempEvent.baseId, descKey: tempEvent.nameKey })
     await mongo.set('journeyGuide', { _id: tempEvent.baseId }, tempEvent)
     await mapGuideTemplates(tempEvent)
   }
+
   if(!rewardUnit[guideDef.unitBaseId]) rewardUnit[guideDef.unitBaseId] = guideDef.unitBaseId
 }
 module.exports = async(gameVersion, localeVersion)=>{
@@ -169,7 +199,9 @@ module.exports = async(gameVersion, localeVersion)=>{
     getFile('challenge', gameVersion),
     getFile('campaign', gameVersion)
   ])
+
   if(!unitList || !lang || !factionList || !guideDefList || !requirementList || !challengeList || !campaignList) return
+  
   let tempManualGuideUnits = await mongo.find('manualGuideUnits', {})
   let manualGuideUnits = {}
   if(tempManualGuideUnits?.length > 0){
@@ -194,3 +226,4 @@ module.exports = async(gameVersion, localeVersion)=>{
   await mongo.set('factions', { _id: 'journey_guide_units_manual' }, { baseId: 'journey_guide_units_manual', nameKey: 'Journey Guide Units', uiFilter: true, units: Object.values(rewardUnit) || [] })
   return true
 }
+

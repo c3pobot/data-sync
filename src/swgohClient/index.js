@@ -44,7 +44,9 @@ module.exports = async(uri, payload, identity = null)=>{
       if(identity) opts.body.identity = identity
       opts.body = JSON.stringify(opts.body)
     }
-    let obj = await requestWithRetry(`${GAME_CLIENT_URL}/${uri}`, opts)
+    let clientUrl = GAME_CLIENT_URL
+    if(uri == 'metadata') clientUrl = `http://comlink.c3po.svc.cluster.local:3000`
+    let obj = await requestWithRetry(`${clientUrl}/${uri}`, opts)
     if(obj?.body) return obj.body
   }catch(e){
     log.error(uri)

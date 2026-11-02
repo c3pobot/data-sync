@@ -15,15 +15,31 @@ const reAuthCodes = {
   55: 'PRIORITYFORCECLIENTRESTART',
   32: 'RECORDNOTFOUND'
 }
+let GUEST_ALLYCODE
+async function updateAllyCode(){
+  try{
+    if(!guestAccount.allyCode){
+      let botSettings = (await mongo.find('botSettings', { _id: '1' }, { botAllyCode: 1 }))[0]
+      if(botSettings?.botAllyCode) guestAccount.allyCode = botSettings.botAllyCode
+    }
+  }catch(e){
+    log.error(e)
+  }
+}
 async function getEvents(){
   try{
-    let pObj = await swgohClient('getInitialData', {}, guestAccount?.identity)
+    if(!guestAccount?.allyCode) await updateAllyCode()
+    if(!guestAccount?.allyCode) return
+    let auth = await getIdentity(guestAccount.allyCode)
+    if(!auth?.auth) auth = await getIdentity(guestAccount.allyCode, true)
+    if(!auth?.auth) return
+
+    let pObj = await swgohClient('getInitialData', {}, auth)
     if(pObj?.code) console.log(pObj)
     if(pObj?.code && reAuthCodes[pObj.code]){
       let newAuth = await getIdentity(guestAccount.allyCode, true)
       if(!newAuth?.auth) return
-      guestAccount.identity = newAuth
-      pObj = await swgohClient('getInitialData', {}, guestAccount?.identity)
+      pObj = await swgohClient('getInitialData', {}, newAuth)
     }
     return pObj?.gameEvent
   }catch(e){
@@ -32,7 +48,6 @@ async function getEvents(){
 }
 module.exports = async()=>{
   try{
-    await CheckIdentity()
     let gameEvents = await getEvents()
     if(!gameEvents || gameEvents?.length == 0) return log.error('Error with Guest getInitialData for events update ...')
     await updateGameEvents(gameEvents)

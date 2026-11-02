@@ -24,6 +24,7 @@ module.exports = async(journey = {})=>{
       if(tempRarity > unit.rarity) unit.rarity = tempRarity
     }
     if(units[i].tier >= 0) unit.gear = { nameKey: `G${units[i].tier}`, name: 'gear', value: units[i].tier }
+    if(units[i].era_level > 0) unit.era_level = units[i].era_level
     guide.units.push(unit)
   }
   if(guide.units.length > 0) await mongo.set('guideTemplates', {_id: guide.id }, guide)
