@@ -135,3 +135,4 @@ const syncEvents = async()=>{
 }
 
 CloneGameData()
+//CheckRabbitMQ()

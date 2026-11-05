@@ -57,7 +57,7 @@ const mapCampaign = (campaign = [], units = {}, factions = {}, lang = {})=>{
       node?.campaignNode?.forEach(c=>{
         if(!res[map.id][c.id]) res[map.id][c.id] = {id: c.id, node: {}}
         c.campaignNodeMission?.forEach(m=>{
-          res[map.id][c.id].node[m.id] = {unit: {}, faction: {}, capitalShip: {}, unitCount: 0, rarity: 0, gp: 0, tier: 0, relic: 0 }
+          res[map.id][c.id].node[m.id] = {unit: {}, faction: {}, factionUnit: {}, capitalShip: {}, unitCount: 0, rarity: 0, gp: 0, tier: 0, relic: 0 }
           if(m.entryCategoryAllowed?.minimumRequiredUnitQuantity > res[map.id][c.id].node[m.id].unitCount) res[map.id][c.id].node[m.id].unitCount = m.entryCategoryAllowed?.minimumRequiredUnitQuantity
           if(m.entryCategoryAllowed?.minimumUnitRarity > res[map.id][c.id].node[m.id].rarity) res[map.id][c.id].node[m.id].rarity = m.entryCategoryAllowed?.minimumUnitRarity
           if(m.entryCategoryAllowed?.minimumGalacticPower > res[map.id][c.id].node[m.id].gp) res[map.id][c.id].node[m.id].gp = m.entryCategoryAllowed?.minimumGalacticPower
@@ -78,7 +78,7 @@ const mapCampaign = (campaign = [], units = {}, factions = {}, lang = {})=>{
               res[map.id][c.id].node[m.id][type][tempUnit.baseId].required = true
             }
           }
-          /*
+          
           for(let i in m?.entryCategoryAllowed?.categoryId){
             let baseId = m.entryCategoryAllowed.categoryId[i], tempUnit, tempFaction, type = 'unit'
             if(baseId && units[baseId]) tempUnit = JSON.parse(JSON.stringify(units[baseId]))
@@ -95,7 +95,7 @@ const mapCampaign = (campaign = [], units = {}, factions = {}, lang = {})=>{
               }
             }
           }
-          */
+          
           for(let i in m?.entryCategoryAllowed?.commanderCategoryId){
             let baseId = m.entryCategoryAllowed.categoryId[i], tempUnit, tempFaction, type = 'unit'
             if(baseId && units[baseId]) tempUnit = JSON.parse(JSON.stringify(units[baseId]))
@@ -169,6 +169,7 @@ const mapGuide = async(guideDef = {}, dataList = {}, autoComplete = [], rewardUn
   }
   if(dataList.campaign[tempEvent.campaignMapId] && dataList.campaign[tempEvent.campaignMapId][tempEvent.campaignNodeId]){
     let tempCampaign = dataList.campaign[tempEvent.campaignMapId][tempEvent.campaignNodeId]
+    if(guideDef.unitBaseId == 'JEDIKNIGHTLUKE') await mongo.set('webTemp', { _id: 'JEDIKNIGHTLUKE' }, { data: tempCampaign} )
     for(let n in tempCampaign?.node) tempEvent.tier[n] = JSON.parse(JSON.stringify(tempCampaign?.node[n]))
   }
   if(requirements?.requirementItem?.length > 0){
@@ -214,6 +215,7 @@ module.exports = async(gameVersion, localeVersion)=>{
   if(units) campaign = mapCampaign(campaignList, faction, units, lang)
   if(!faction || !campaign || !units ) return
 
+  await mongo.set('webTemp', { _id: 'mapCampaign' }, { data: campaign } )
   let i = guideDefList.length, rewardUnit = {}, array = [], autoComplete = [], dataList = { units: units, faction: faction, campaign: campaign, lang: lang, requirementList: requirementList, challengeList: challengeList, manualGuideUnits: manualGuideUnits }
   while(i--) array.push(mapGuide(guideDefList[i], dataList, autoComplete, rewardUnit))
   await Promise.all(array)
