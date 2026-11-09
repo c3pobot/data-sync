@@ -3,6 +3,7 @@ const log = require('logger')
 const fs = require('fs')
 let logLevel = process.env.LOG_LEVEL || log.Level.INFO;
 log.setLevel(logLevel);
+log.setLevel('debug');
 
 const mongo = require('mongoclient')
 const exchange = require('./exchange')
@@ -134,5 +135,5 @@ const syncEvents = async()=>{
   }
 }
 
-CloneGameData()
-//CheckRabbitMQ()
+//CloneGameData()
+CheckRabbitMQ()

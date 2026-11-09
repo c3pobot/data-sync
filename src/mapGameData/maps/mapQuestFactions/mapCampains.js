@@ -6,7 +6,7 @@ const combineBattles = (battles = [])=>{
   let data = {}
   for(let i in battles){
     let key = `${battles[i].count}`
-    if(!data[key]) data[key] = { key: key, units: battles[i].units, count: battles[i].count, hard: [], normal: [], nameKey: battles[i].nameKey, type: battles[i].type }
+    if(!data[key]) data[key] = { key: key, units: battles[i].units, count: battles[i].count, hard: [], normal: [], nameKey: battles[i].nameKey, type: battles[i].type, campaignType: battles[i].campaignType }
     if(data[key][battles[i].type]) data[key][battles[i].type].push(battles[i].missionNameKey)
   }
   return Object.values(data)
@@ -32,7 +32,7 @@ const checkEnemyUnitPreview = (units = [], battles = {}, campaignInfo = {}, enem
 
     let eventKey = `${campaignInfo.mapId}-${campaignInfo.nodeDifficulty}`
     let key = `${campaignInfo.mapId}-${campaignInfo.nodeDifficulty}-${campaignInfo.campaignNodeId}-${campaignInfo.campaignNodeNissionId}`
-    if(!battles[key]) battles[key] = { id: key, eventKey: eventKey, units: [], count: 0, type: (campaignInfo.nodeDifficulty == 4 ? 'normal':'hard'), nameKey: campaignInfo.nameKey, missionNameKey: campaignInfo.missionNameKey?.replace('Battle', '')?.replace('-', '').trim()  }
+    if(!battles[key]) battles[key] = { id: key, eventKey: eventKey, units: [], count: 0, campaignType: campaignInfo.campaignType, type: (campaignInfo.nodeDifficulty == 4 ? 'normal':'hard'), nameKey: campaignInfo.nameKey, missionNameKey: campaignInfo.missionNameKey?.replace('Battle', '')?.replace('-', '').trim()  }
 
     if(battles[key]?.units){
       battles[key].units.push(unit)
@@ -47,12 +47,12 @@ module.exports = ( units = [], campaignList = [], lang = {}) =>{
     let nameKey = lang[campaignList[i].nameKey]?.replace(/\\n/g, ' ')
     if(!nameKey) continue
 
-    let battles = checkCampaignMap(units, { campaignId: campaignList[i].id, nameKey: nameKey }, campaignList[i].campaignMap, lang )
+    let battles = checkCampaignMap(units, { campaignId: campaignList[i].id, nameKey: nameKey, campaignType: campaignList[i].campaignType }, campaignList[i].campaignMap, lang )
     if(!battles || battles?.length == 0) continue
 
     for(let b in battles){
       if(!battles[b].count) continue
-      let battle = { nameKey: battles[b].nameKey, count: battles[b].count, nodes: '', hard: battles[b].hard, normal: battles[b].normal, units: battles[b].units }
+      let battle = { nameKey: battles[b].nameKey, count: battles[b].count, nodes: '', hard: battles[b].hard, normal: battles[b].normal, units: battles[b].units, campaignType: battles[b].campaignType }
       if(battle?.normal?.length > 0) battle.nodes += `Normal ${battle.normal?.join(', ')}\\n`
       if(battle?.hard?.length > 0) battle.nodes += `Hard ${battle.hard?.join(', ')}\\n`
       data.push(battle)

@@ -15,4 +15,5 @@ Cmds.unit = require('./unit')
 Cmds['mod-set'] = require('./mod-set')
 Cmds['mod-slot'] = require('./mod-slot')
 Cmds['mod-stat'] = require('./mod-stat')
+Cmds.unit_pve = require('./unit_pve')
 module.exports = Cmds
