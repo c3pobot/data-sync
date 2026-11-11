@@ -1,12 +1,12 @@
 'use strict'
 const mongo = require('mongoclient')
 module.exports = async(gameVersion, localeVersion)=>{
-  let obj = await mongo.find('questUnitList', {}, { id: 1, nameKey: 1})
+  let obj = await mongo.find('questUnitList', {}, { baseId: 1, nameKey: 1})
   if(!obj || obj.length == 0) return
   let nameSet = new Set(), autoComplete = []
   for(let i of obj){
     if(nameSet.has(i.nameKey)) continue
-    autoComplete.push({ name: i.nameKey, value: i.id })
+    autoComplete.push({ name: i.nameKey, value: i.baseId })
     nameSet.add(i.nameKey)
   }
   if(autoComplete.length > 0){
