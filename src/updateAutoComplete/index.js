@@ -30,6 +30,8 @@ module.exports = async({ latestGamedataVersion, latestLocalizationBundleVersion,
   if(missing.length == 0){
     maps['datacron-set'](latestGamedataVersion, latestLocalizationBundleVersion)
     //maps['ga-date'](latestGamedataVersion, latestLocalizationBundleVersion)
+    maps['faction'](latestGamedataVersion, latestLocalizationBundleVersion)
+    maps['raid-faction'](latestGamedataVersion, latestLocalizationBundleVersion)
     maps['journey'](latestGamedataVersion, latestLocalizationBundleVersion)
     return true
   }
